@@ -58,7 +58,7 @@ function cpp_admin_assets($hook) {
 
 add_action('admin_menu', 'cpp_admin_menu');
 function cpp_admin_menu() {
-    $main_page = add_menu_page( __('مدیریت قیمت‌ها و سفارشات', 'cpp-full'), __('مدیریت قیمت', 'cpp-full'), 'manage_options', 'custom-prices-products', 'cpp_products_page', 'dashicons-tag', 30 );
+    add_menu_page( __('مدیریت قیمت‌ها و سفارشات', 'cpp-full'), __('مدیریت قیمت', 'cpp-full'), 'manage_options', 'custom-prices-products', 'cpp_products_page', 'dashicons-tag', 30 );
     add_submenu_page('custom-prices-products', __('دسته‌بندی‌ها', 'cpp-full'), __('دسته‌بندی‌ها', 'cpp-full'), 'manage_options', 'custom-prices-categories', 'cpp_categories_page');
     add_submenu_page('custom-prices-products', __('سفارشات', 'cpp-full'), __('سفارشات مشتری', 'cpp-full'), 'manage_options', 'custom-prices-orders', 'cpp_orders_page');
     add_submenu_page('custom-prices-products', __('شورت‌کدها', 'cpp-full'), __('شورت‌کدها', 'cpp-full'), 'manage_options', 'custom-prices-shortcodes', 'cpp_shortcodes_page');
@@ -66,7 +66,6 @@ function cpp_admin_menu() {
     add_submenu_page( null, __('ویرایش محصول', 'cpp-full'), __('ویرایش محصول', 'cpp-full'), 'manage_options', 'custom-prices-product-edit', 'cpp_product_edit_page' );
 }
 
-// در این تابع، پاپ آپ ویرایش برای هر دو صفحه محصولات و دسته‌بندی‌ها اضافه می‌شود
 function cpp_products_page() { 
     include CPP_TEMPLATES_DIR . 'products.php'; 
     echo '<div id="cpp-edit-modal" class="cpp-modal-overlay" style="display: none;"><div class="cpp-modal-container"><span class="cpp-close-modal">×</span><div class="cpp-edit-modal-content"></div></div></div>';
@@ -83,7 +82,6 @@ function cpp_product_edit_page() { include CPP_TEMPLATES_DIR . 'product-edit.php
 add_action('admin_init', 'cpp_handle_admin_actions');
 function cpp_handle_admin_actions() {
     global $wpdb;
-    
     if (isset($_POST['cpp_add_category'])) {
         if (!isset($_POST['cpp_add_cat_nonce']) || !wp_verify_nonce($_POST['cpp_add_cat_nonce'], 'cpp_add_cat_action')) { wp_die(__('بررسی امنیتی ناموفق بود.', 'cpp-full')); }
         $name = sanitize_text_field($_POST['name']);
@@ -94,7 +92,6 @@ function cpp_handle_admin_actions() {
         $redirect_url = add_query_arg('cpp_message', $inserted ? 'category_added' : 'category_add_failed', admin_url('admin.php?page=custom-prices-categories'));
         wp_redirect($redirect_url); exit;
     }
-
     if (isset($_POST['cpp_add_product'])) {
         if (!isset($_POST['cpp_add_product_nonce']) || !wp_verify_nonce($_POST['cpp_add_product_nonce'], 'cpp_add_product_action')) { wp_die(__('بررسی امنیتی ناموفق بود.', 'cpp-full')); }
         $data = ['cat_id' => intval($_POST['cat_id']),'name' => sanitize_text_field($_POST['name']),'price' => sanitize_text_field($_POST['price']),'min_price' => sanitize_text_field($_POST['min_price']),'max_price' => sanitize_text_field($_POST['max_price']),'product_type' => sanitize_text_field($_POST['product_type']),'unit' => sanitize_text_field($_POST['unit']),'load_location' => sanitize_text_field($_POST['load_location']),'is_active' => intval($_POST['is_active']),'description' => sanitize_textarea_field($_POST['description']),'image_url' => esc_url_raw($_POST['image_url']),'last_updated_at' => current_time('mysql')];
@@ -103,7 +100,6 @@ function cpp_handle_admin_actions() {
         $redirect_url = add_query_arg('cpp_message', $inserted ? 'product_added' : 'product_add_failed', admin_url('admin.php?page=custom-prices-products'));
         wp_redirect($redirect_url); exit;
     }
-
     if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
         $id = intval($_GET['id']);
         $page = isset($_GET['page']) ? sanitize_key($_GET['page']) : '';
@@ -121,13 +117,18 @@ function cpp_handle_admin_actions() {
     }
 }
 
-
 // --- AJAX برای محصولات ---
 add_action('wp_ajax_cpp_fetch_product_edit_form', 'cpp_fetch_product_edit_form');
 function cpp_fetch_product_edit_form() {
-    check_ajax_referer('cpp_admin_nonce', 'security');
-    $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-    if (!$product_id) { wp_send_json_error(__('شناسه محصول نامعتبر است.', 'cpp-full')); }
+    // --- شروع تغییر: اصلاح روش بررسی امنیتی ---
+    if (!isset($_GET['security']) || !wp_verify_nonce($_GET['security'], 'cpp_admin_nonce')) {
+        wp_send_json_error(__('بررسی امنیتی ناموفق بود.', 'cpp-full'));
+    }
+    // --- پایان تغییر ---
+    
+    $_GET['id'] = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    if (!$_GET['id']) { wp_send_json_error(__('شناسه محصول نامعتبر است.', 'cpp-full')); }
+
     ob_start();
     include CPP_TEMPLATES_DIR . 'product-edit.php';
     $html = ob_get_clean();
@@ -156,15 +157,18 @@ function cpp_handle_edit_product_ajax() {
     }
 }
 
-// --- شروع تغییر: افزودن توابع AJAX برای ویرایش دسته‌بندی ---
+// --- AJAX برای دسته‌بندی‌ها ---
 add_action('wp_ajax_cpp_fetch_category_edit_form', 'cpp_fetch_category_edit_form');
 function cpp_fetch_category_edit_form() {
-    check_ajax_referer('cpp_admin_nonce', 'security');
-    // برای ارسال متغیر به فایل قالب، از $_GET استفاده می‌کنیم
-    $_GET['id'] = isset($_GET['id']) ? intval($_GET['id']) : 0;
-    if (!$_GET['id']) {
-        wp_send_json_error(__('شناسه دسته‌بندی نامعتبر است.', 'cpp-full'));
+    // --- شروع تغییر: اصلاح روش بررسی امنیتی ---
+    if (!isset($_GET['security']) || !wp_verify_nonce($_GET['security'], 'cpp_admin_nonce')) {
+        wp_send_json_error(__('بررسی امنیتی ناموفق بود.', 'cpp-full'));
     }
+    // --- پایان تغییر ---
+
+    $_GET['id'] = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    if (!$_GET['id']) { wp_send_json_error(__('شناسه دسته‌بندی نامعتبر است.', 'cpp-full')); }
+
     ob_start();
     include CPP_TEMPLATES_DIR . 'category-edit.php';
     $html = ob_get_clean();
@@ -174,30 +178,17 @@ function cpp_fetch_category_edit_form() {
 add_action('wp_ajax_cpp_handle_edit_category_ajax', 'cpp_handle_edit_category_ajax');
 function cpp_handle_edit_category_ajax() {
     global $wpdb;
-    if (!isset($_POST['cpp_edit_cat_nonce']) || !wp_verify_nonce($_POST['cpp_edit_cat_nonce'], 'cpp_edit_cat_action')) {
-        wp_send_json_error(__('بررسی امنیتی ناموفق بود.', 'cpp-full'));
-    }
+    if (!isset($_POST['cpp_edit_cat_nonce']) || !wp_verify_nonce($_POST['cpp_edit_cat_nonce'], 'cpp_edit_cat_action')) { wp_send_json_error(__('بررسی امنیتی ناموفق بود.', 'cpp-full')); }
     $cat_id = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
-    if (!$cat_id) {
-        wp_send_json_error(__('شناسه دسته‌بندی نامعتبر است.', 'cpp-full'));
-    }
-    $data = [
-        'name' => sanitize_text_field($_POST['name']),
-        'slug' => sanitize_title($_POST['slug']),
-        'image_url' => esc_url_raw($_POST['image_url']),
-    ];
+    if (!$cat_id) { wp_send_json_error(__('شناسه دسته‌بندی نامعتبر است.', 'cpp-full')); }
+    $data = [ 'name' => sanitize_text_field($_POST['name']), 'slug' => sanitize_title($_POST['slug']), 'image_url' => esc_url_raw($_POST['image_url']) ];
     if (empty($data['slug'])) $data['slug'] = sanitize_title($data['name']);
-
     $updated = $wpdb->update(CPP_DB_CATEGORIES, $data, ['id' => $cat_id]);
-
-    if ($updated !== false) {
-        wp_send_json_success(__('دسته‌بندی با موفقیت به‌روزرسانی شد.', 'cpp-full'));
-    } else {
-        wp_send_json_error(__('خطا در به‌روزرسانی دسته‌بندی.', 'cpp-full'));
-    }
+    if ($updated !== false) { wp_send_json_success(__('دسته‌بندی با موفقیت به‌روزرسانی شد.', 'cpp-full')); } 
+    else { wp_send_json_error(__('خطا در به‌روزرسانی دسته‌بندی.', 'cpp-full')); }
 }
-// --- پایان تغییر ---
 
+// --- AJAX برای ویرایش سریع ---
 add_action('wp_ajax_cpp_quick_update', 'cpp_quick_update');
 function cpp_quick_update() {
     check_ajax_referer('cpp_admin_nonce', 'security'); 
