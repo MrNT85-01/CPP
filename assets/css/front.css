@@ -13,6 +13,7 @@
 .cpp-products-table th, .cpp-products-table td {
     padding: 12px 15px;
     border-bottom: 1px solid #eee;
+    vertical-align: middle;
 }
 .cpp-products-table th {
     background-color: #f8f8f8;
@@ -36,26 +37,29 @@
     font-weight: bold;
     color: #333;
 }
-.cpp-order-btn, .cpp-chart-btn {
-    background-color: #0073aa;
-    color: white;
+.cpp-actions-cell {
+    white-space: nowrap;
+}
+
+/* --- شروع تغییر: استایل جدید برای دکمه‌های آیکونی --- */
+.cpp-icon-btn {
+    background: none;
     border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
-    transition: background-color 0.2s;
-    margin: 2px;
+    padding: 5px;
+    display: inline-block;
+    vertical-align: middle;
 }
-.cpp-chart-btn {
-    background-color: #555;
+.cpp-icon-btn img {
+    width: 18px; /* سایز جدید و کوچک‌تر */
+    height: 18px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
 }
-.cpp-order-btn:hover {
-    background-color: #005a87;
+.cpp-icon-btn:hover img {
+    opacity: 1;
 }
-.cpp-chart-btn:hover {
-    background-color: #333;
-}
+/* --- پایان تغییر --- */
 
 
 /* --- استایل‌های پاپ آپ (Modal) --- */
