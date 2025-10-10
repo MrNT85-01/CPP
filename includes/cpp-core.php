@@ -28,32 +28,47 @@ class CPP_Core {
     public static function get_chart_data($product_id, $months = 6) {
         global $wpdb;
         
-        // دریافت تاریخچه قیمت پایه
-        $history = $wpdb->get_results($wpdb->prepare("
-            SELECT price, change_time 
-            FROM " . CPP_DB_PRICE_HISTORY . " 
-            WHERE product_id=%d AND change_time >= DATE_SUB(NOW(), INTERVAL %d MONTH) 
-            ORDER BY change_time ASC
-        ", $product_id, $months));
-        
-        // دریافت محصول فعلی برای گرفتن حداقل و حداکثر قیمت
-        $product = $wpdb->get_row($wpdb->prepare("SELECT min_price, max_price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $product_id));
-
+        $disable_base_price = get_option('cpp_disable_base_price', 0);
         $labels = [];
         $prices = [];
         $min_prices = [];
         $max_prices = [];
+        
+        // فقط در صورتی که قیمت پایه غیرفعال نباشد، تاریخچه آن را واکشی کن
+        if (!$disable_base_price) {
+            $history = $wpdb->get_results($wpdb->prepare("
+                SELECT price, change_time 
+                FROM " . CPP_DB_PRICE_HISTORY . " 
+                WHERE product_id=%d AND change_time >= DATE_SUB(NOW(), INTERVAL %d MONTH) 
+                ORDER BY change_time ASC
+            ", $product_id, $months));
 
-        foreach ($history as $row) {
-             $labels[] = date_i18n('Y/m/d', strtotime($row->change_time)); 
-             $prices[] = (float) $row->price;
-             // اگر محصول حداقل و حداکثر قیمت داشت، آن را برای هر نقطه از نمودار تکرار می‌کنیم تا خط افقی رسم شود
-             if ($product && !empty($product->min_price)) {
-                 $min_prices[] = (float) $product->min_price;
-             }
-             if ($product && !empty($product->max_price)) {
-                 $max_prices[] = (float) $product->max_price;
-             }
+            foreach ($history as $row) {
+                 $labels[] = date_i18n('Y/m/d', strtotime($row->change_time)); 
+                 $prices[] = (float) str_replace(',', '', $row->price);
+            }
+        }
+
+        // دریافت محصول فعلی برای گرفتن حداقل و حداکثر قیمت
+        $product = $wpdb->get_row($wpdb->prepare("SELECT min_price, max_price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $product_id));
+
+        // اگر محصول حداقل و حداکثر قیمت داشت، آن را برای هر نقطه از نمودار تکرار می‌کنیم
+        if ($product && !empty($product->min_price) && !empty($product->max_price)) {
+            // اگر برچسبی از قیمت پایه نداشتیم (چون غیرفعال بود)، یک برچسب پیش فرض برای نمایش بازه قیمت ایجاد میکنیم
+            if(empty($labels)){
+                $labels_history = $wpdb->get_col($wpdb->prepare("SELECT change_time FROM " . CPP_DB_PRICE_HISTORY . " WHERE product_id=%d AND change_time >= DATE_SUB(NOW(), INTERVAL %d MONTH) ORDER BY change_time ASC LIMIT 5", $product_id, $months));
+                if (!empty($labels_history)) {
+                    foreach($labels_history as $label_date) {
+                        $labels[] = date_i18n('Y/m/d', strtotime($label_date));
+                    }
+                } else {
+                    $labels = [date_i18n('Y/m/d')];
+                }
+            }
+            foreach ($labels as $_) {
+                 $min_prices[] = (float) str_replace(',', '', $product->min_price);
+                 $max_prices[] = (float) str_replace(',', '', $product->max_price);
+            }
         }
         
         return [
@@ -81,6 +96,9 @@ function cpp_ajax_get_chart_data() {
     $product_id = isset($_GET['product_id']) ? intval($_GET['product_id']) : 0;
     if (!$product_id) wp_send_json_error('Invalid Product ID');
     $data = CPP_Core::get_chart_data($product_id);
+    if(empty($data['labels'])) {
+        wp_send_json_error('No data');
+    }
     wp_send_json_success($data);
 }
 
