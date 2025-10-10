@@ -1,69 +1,61 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-// URL آیکون‌ها
-$cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
-$chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
+// --- واکشی تنظیمات برای بررسی نمایش قیمت پایه ---
+$disable_base_price = get_option('cpp_disable_base_price', 0);
 ?>
 
-<div class="cpp-grid-view-wrapper">
-    <?php if (!empty($categories)) : ?>
-        <div class="cpp-grid-view-filters">
-            <a href="#" class="filter-btn active" data-cat-id="all">همه دسته‌ها</a>
-            <?php foreach ($categories as $cat) : ?>
-                <a href="#" class="filter-btn" data-cat-id="<?php echo esc_attr($cat->id); ?>"><?php echo esc_html($cat->name); ?></a>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-
-    <table class="cpp-grid-view-table">
+<div class="cpp-products-list-container">
+    <table class="cpp-products-table">
         <thead>
             <tr>
-                <th class="col-product-name"><?php _e('عنوان محصول', 'cpp-full'); ?></th>
-                <th class="col-factory"><?php _e('کارخانه', 'cpp-full'); ?></th>
-                <th class="col-size"><?php _e('سایز', 'cpp-full'); ?></th>
-                <th class="col-date"><?php _e('تاریخ بروز رسانی', 'cpp-full'); ?></th>
-                <th class="col-price"><?php _e('قیمت', 'cpp-full'); ?></th>
-                <th class="col-buy"><?php _e('خرید', 'cpp-full'); ?></th>
-                <th class="col-chart"><?php _e('نمودار', 'cpp-full'); ?></th>
+                <th><?php _e('محصول', 'cpp-full'); ?></th>
+                <th><?php _e('نوع', 'cpp-full'); ?></th>
+                <th><?php _e('واحد', 'cpp-full'); ?></th>
+                <th><?php _e('محل بارگیری', 'cpp-full'); ?></th>
+                <th><?php _e('آخرین بروزرسانی', 'cpp-full'); ?></th>
+                
+                <?php if (!$disable_base_price) : ?>
+                <th><?php _e('قیمت پایه', 'cpp-full'); ?></th>
+                <?php endif; ?>
+                
+                <th><?php _e('بازه قیمت', 'cpp-full'); ?></th>
+                <th><?php _e('عملیات', 'cpp-full'); ?></th>
             </tr>
         </thead>
         <tbody>
-            <?php if (!empty($products)) : foreach ($products as $product) : ?>
-                <tr class="product-row" data-cat-id="<?php echo esc_attr($product->cat_id); ?>">
-                    <td class="col-product-name"><?php echo esc_html($product->name); ?></td>
-                    <td class="col-factory"><?php echo esc_html($product->load_location); ?></td>
-                    <td class="col-size"><?php echo esc_html($product->product_type); ?></td>
-                    <td class="col-date"><?php echo esc_html(date_i18n('Y/m/d', strtotime($product->last_updated_at))); ?></td>
-                    <td class="col-price">
-                        <?php 
-                            if (!empty($product->price) && is_numeric(str_replace(',', '', $product->price))) {
-                                echo esc_html(number_format((float)str_replace(',', '', $product->price)));
-                            } else {
-                                echo esc_html($product->price);
-                            }
-                        ?>
-                    </td>
-                    <td class="col-buy">
-                        <button class="cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>">
-                            <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>">
-                        </button>
-                    </td>
-                    <td class="col-chart">
-                         <button class="cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>">
-                            <img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>">
-                        </button>
-                    </td>
-                </tr>
-            <?php endforeach; else: ?>
-                <tr>
-                    <td colspan="7"><?php _e('محصولی برای نمایش یافت نشد.', 'cpp-full'); ?></td>
-                </tr>
-            <?php endif; ?>
+        <?php foreach ($products as $product) : ?>
+            <tr data-id="<?php echo $product->id; ?>">
+                <td>
+                    <div class="cpp-product-info">
+                        <img src="<?php echo esc_url($product->image_url) ? esc_url($product->image_url) : CPP_ASSETS_URL . 'images/default-product.png'; ?>" alt="<?php echo esc_attr($product->name); ?>">
+                        <div class="cpp-product-details">
+                            <span class="cpp-product-name"><?php echo esc_html($product->name); ?></span>
+                        </div>
+                    </div>
+                </td>
+                <td><?php echo esc_html($product->product_type); ?></td>
+                <td><?php echo esc_html($product->unit); ?></td>
+                <td><?php echo esc_html($product->load_location); ?></td>
+                <td><?php echo date_i18n('Y/m/d H:i', strtotime($product->last_updated_at)); ?></td>
+
+                <?php if (!$disable_base_price) : ?>
+                <td class="cpp-base-price"><?php echo esc_html($product->price); ?></td>
+                <?php endif; ?>
+
+                <td class="cpp-price-range">
+                    <?php if (!empty($product->min_price) && !empty($product->max_price)) : ?>
+                        <?php echo esc_html($product->min_price); ?> - <?php echo esc_html($product->max_price); ?>
+                    <?php else: ?>
+                        <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <button class="cpp-order-btn" data-product-id="<?php echo $product->id; ?>" data-product-name="<?php echo esc_attr($product->name); ?>"><?php _e('ثبت سفارش', 'cpp-full'); ?></button>
+                    <button class="cpp-chart-btn" data-product-id="<?php echo $product->id; ?>"><?php _e('نمودار', 'cpp-full'); ?></button>
+                </td>
+            </tr>
+        <?php endforeach; ?>
         </tbody>
     </table>
-
-    <div class="cpp-grid-view-footer">
-        <a href="#" class="cpp-view-more-btn"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></a>
-    </div>
 </div>
