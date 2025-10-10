@@ -10,7 +10,11 @@ class CPP_Core {
 
         $sql1 = "CREATE TABLE " . CPP_DB_CATEGORIES . " ( id mediumint(9) NOT NULL AUTO_INCREMENT, name varchar(200) NOT NULL, slug varchar(200) NOT NULL, image_url varchar(255) DEFAULT '', created datetime DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY  (id) ) $charset_collate;";
         $sql2 = "CREATE TABLE " . CPP_DB_PRODUCTS . " ( id mediumint(9) NOT NULL AUTO_INCREMENT, cat_id mediumint(9) NOT NULL, name varchar(200) NOT NULL, price varchar(50) NOT NULL, min_price varchar(50) DEFAULT '0', max_price varchar(50) DEFAULT '0', product_type varchar(100) DEFAULT '', unit varchar(50) DEFAULT '', load_location varchar(200) DEFAULT '', is_active tinyint(1) DEFAULT 1, description text, image_url varchar(255) DEFAULT '', last_updated_at datetime DEFAULT CURRENT_TIMESTAMP, created datetime DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY  (id) ) $charset_collate;";
-        $sql3 = "CREATE TABLE " . CPP_DB_ORDERS . " ( id mediumint(9) NOT NULL AUTO_INCREMENT, product_id mediumint(9) NOT NULL, product_name varchar(200) NOT NULL, customer_name varchar(200) NOT NULL, phone varchar(50) NOT NULL, qty varchar(50) NOT NULL, note text, admin_note text, created datetime DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY  (id) ) $charset_collate;";
+        
+        // --- شروع تغییر: افزودن ستون status به جدول سفارشات ---
+        $sql3 = "CREATE TABLE " . CPP_DB_ORDERS . " ( id mediumint(9) NOT NULL AUTO_INCREMENT, product_id mediumint(9) NOT NULL, product_name varchar(200) NOT NULL, customer_name varchar(200) NOT NULL, phone varchar(50) NOT NULL, qty varchar(50) NOT NULL, note text, admin_note text, status varchar(50) DEFAULT 'new_order', created datetime DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY  (id) ) $charset_collate;";
+        // --- پایان تغییر ---
+
         $sql4 = "CREATE TABLE " . CPP_DB_PRICE_HISTORY . " ( id mediumint(9) NOT NULL AUTO_INCREMENT, product_id mediumint(9) NOT NULL, price varchar(200) NOT NULL, change_time datetime DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id) ) $charset_collate;";
         
         dbDelta($sql1);
@@ -34,7 +38,6 @@ class CPP_Core {
         $min_prices = [];
         $max_prices = [];
         
-        // فقط در صورتی که قیمت پایه غیرفعال نباشد، تاریخچه آن را واکشی کن
         if (!$disable_base_price) {
             $history = $wpdb->get_results($wpdb->prepare("
                 SELECT price, change_time 
@@ -49,12 +52,9 @@ class CPP_Core {
             }
         }
 
-        // دریافت محصول فعلی برای گرفتن حداقل و حداکثر قیمت
         $product = $wpdb->get_row($wpdb->prepare("SELECT min_price, max_price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $product_id));
 
-        // اگر محصول حداقل و حداکثر قیمت داشت، آن را برای هر نقطه از نمودار تکرار می‌کنیم
         if ($product && !empty($product->min_price) && !empty($product->max_price)) {
-            // اگر برچسبی از قیمت پایه نداشتیم (چون غیرفعال بود)، یک برچسب پیش فرض برای نمایش بازه قیمت ایجاد میکنیم
             if(empty($labels)){
                 $labels_history = $wpdb->get_col($wpdb->prepare("SELECT change_time FROM " . CPP_DB_PRICE_HISTORY . " WHERE product_id=%d AND change_time >= DATE_SUB(NOW(), INTERVAL %d MONTH) ORDER BY change_time ASC LIMIT 5", $product_id, $months));
                 if (!empty($labels_history)) {
@@ -127,7 +127,8 @@ function cpp_submit_order() {
         'customer_name'=>$customer_name,
         'phone'=>$phone,
         'qty'=>$qty,
-        'note'=>$note
+        'note'=>$note,
+        'status' => 'new_order' // وضعیت پیش‌فرض برای سفارش جدید
     ]);
 
     $placeholders = [
