@@ -1,0 +1,153 @@
+/* --- استایل‌های عمومی لیست محصولات --- */
+.cpp-products-list-container {
+    overflow-x: auto;
+    font-family: sans-serif;
+}
+.cpp-products-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+    direction: rtl;
+    border: 1px solid #eee;
+}
+.cpp-products-table th, .cpp-products-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+.cpp-products-table th {
+    background-color: #f8f8f8;
+    font-weight: bold;
+}
+.cpp-products-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+.cpp-product-info {
+    display: flex;
+    align-items: center;
+}
+.cpp-product-info img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-left: 10px;
+}
+.cpp-product-name {
+    font-weight: bold;
+    color: #333;
+}
+.cpp-order-btn, .cpp-chart-btn {
+    background-color: #0073aa;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.2s;
+    margin: 2px;
+}
+.cpp-chart-btn {
+    background-color: #555;
+}
+.cpp-order-btn:hover {
+    background-color: #005a87;
+}
+.cpp-chart-btn:hover {
+    background-color: #333;
+}
+
+
+/* --- استایل‌های پاپ آپ (Modal) --- */
+.cpp-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    direction: rtl;
+}
+.cpp-modal-container {
+    background-color: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.cpp-chart-container {
+    max-width: 800px;
+}
+.cpp-chart-inner {
+    width: 100%;
+    height: 400px;
+    position: relative;
+}
+.cpp-modal-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+    line-height: 1;
+}
+.cpp-modal-close:hover {
+    color: #333;
+}
+.cpp-modal-container h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: 600;
+}
+.cpp-form-field {
+    margin-bottom: 15px;
+}
+.cpp-form-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+.cpp-form-field input[type="text"],
+.cpp-form-field input[type="tel"],
+.cpp-form-field textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.cpp-form-field button {
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.cpp-form-field button:hover {
+    background-color: #218838;
+}
+.cpp-form-field .required {
+    color: #dc3545;
+}
+.cpp-form-message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    text-align: center;
+}
+.cpp-success { background-color: #d4edda; color: #155724; }
+.cpp-error { background-color: #f8d7da; color: #721c24; }
+.chart-error { text-align: center; padding: 20px; color: #721c24; }

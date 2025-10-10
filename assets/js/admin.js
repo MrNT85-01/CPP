@@ -1,0 +1,227 @@
+jQuery(document).ready(function($) {
+
+    // --- ۱. آکاردئون (آبشاری) برای فرم‌ها ---
+    $('.cpp-accordion-header').on('click', function() {
+        $(this).toggleClass('active').next('.cpp-accordion-content').slideToggle(300);
+    });
+    // اطمینان از بسته بودن آکاردئون در ابتدا
+    $('.cpp-accordion-content').hide(); 
+    $('.cpp-accordion-header').removeClass('active'); 
+
+    // --- ۲. مدیریت آپلود عکس (بدون تغییر) ---
+    var mediaUploader;
+    $(document).on('click', '.cpp-upload-btn', function(e) {
+        e.preventDefault();
+        var button = $(this);
+        var input_field = button.siblings('input[type="text"]');
+        var preview_img_container = button.siblings('.cpp-image-preview');
+        if (mediaUploader) { mediaUploader.open(); return; }
+        mediaUploader = wp.media({ title: 'انتخاب یا آپلود تصویر', button: { text: 'استفاده از این تصویر' }, multiple: false });
+        mediaUploader.on('select', function() {
+            var attachment = mediaUploader.state().get('selection').first().toJSON();
+            input_field.val(attachment.url);
+            preview_img_container.html('<img src="' + attachment.url + '" style="max-width: 100px; height: auto; margin-top: 10px;">');
+        });
+        mediaUploader.open();
+    });
+
+jQuery(document).ready(function($) {
+
+    // ... (کدهای آکاردئون و آپلود عکس بدون تغییر) ...
+
+    // --- ۳. ویرایش سریع با دبل کلیک (Quick Edit) - بازنویسی نهایی ---
+    $(document).on('dblclick', '.cpp-quick-edit, .cpp-quick-edit-select', function() {
+        var cell = $(this);
+        if (cell.hasClass('editing')) return;
+
+        var id = cell.data('id');
+        var field = cell.data('field');
+        var table_type = cell.data('table-type');
+        var original_text = cell.text().trim();
+
+        // ذخیره محتوای اصلی برای حالت لغو
+        cell.data('original-content', cell.html());
+        cell.addClass('editing');
+
+        var input_element;
+
+        if (cell.hasClass('cpp-quick-edit-select')) {
+            var current_value = cell.data('current');
+            input_element = $('<select>').addClass('cpp-quick-edit-input');
+            
+            // انتخاب لیست آپشن‌ها بر اساس نوع جدول
+            var options_list = (table_type === 'orders') ? cpp_admin_vars.order_statuses : cppStatusOptions;
+
+            $.each(options_list, function(val, text) {
+                $('<option>').val(val).text(text).prop('selected', val == current_value).appendTo(input_element);
+            });
+        } else {
+            var input_type = (field === 'admin_note' || field === 'description') ? 'textarea' : 'text';
+            input_element = $(`<${input_type}>`).addClass('cpp-quick-edit-input').val(original_text);
+        }
+        
+        var save_btn = $('<button>').addClass('button button-primary button-small').text('ذخیره');
+        var cancel_btn = $('<button>').addClass('button button-secondary button-small').text('لغو').css('margin-right', '5px');
+        var buttons = $('<div>').addClass('cpp-quick-edit-buttons').css('margin-top', '5px').append(save_btn).append(cancel_btn);
+
+        cell.html('').append(input_element).append(buttons);
+        input_element.focus();
+
+        // تعریف رویدادها
+        save_btn.on('click', function() { performSave(cell, id, field, table_type); });
+        cancel_btn.on('click', function() { cell.removeClass('editing').html(cell.data('original-content')); });
+        input_element.on('keydown', function(e) {
+            if (e.key === 'Escape') cancel_btn.click();
+            if (e.key === 'Enter' && input_type === 'text') save_btn.click();
+        });
+    });
+    
+    function performSave(cell, id, field, table_type) {
+        var new_value = cell.find('.cpp-quick-edit-input').val();
+        cell.removeClass('editing').html('در حال ذخیره...');
+
+        $.post(cpp_admin_vars.ajax_url, {
+            action: 'cpp_quick_update', security: cpp_admin_vars.nonce, id: id, field: field, value: new_value, table_type: table_type
+        }, function(response) {
+            if (response.success) {
+                var display_value;
+                if (cell.hasClass('cpp-quick-edit-select')) {
+                    var options_list = (table_type === 'orders') ? cpp_admin_vars.order_statuses : cppStatusOptions;
+                    display_value = options_list[new_value];
+                    cell.data('current', new_value);
+                } else {
+                    display_value = new_value.replace(/\n/g, '<br>');
+                }
+                cell.html(display_value);
+                
+                // آپدیت زمان
+                if (response.data.new_time) {
+                    cell.closest('tr').find('.cpp-last-update').text(response.data.new_time);
+                }
+            } else {
+                alert('خطا: ' + response.data);
+                cell.html(cell.data('original-content'));
+            }
+        }).fail(function() {
+            alert('خطای سرور.');
+            cell.html(cell.data('original-content'));
+        });
+    }
+
+
+    // --- ۴. منطق پاپ‌آپ ویرایش ---
+    $(document).on('click', '.cpp-edit-button', function() {
+        var productId = $(this).data('product-id');
+        $('#cpp-edit-modal').data('product-id', productId).addClass('loading').show();
+        $('.cpp-edit-modal-content').html('<p style="text-align:center; padding: 20px;">در حال بارگذاری فرم ویرایش...</p>');
+
+        $.get(cpp_admin_vars.ajax_url, {
+            action: 'cpp_fetch_product_edit_form',
+            id: productId
+        }, function(response) {
+            $('#cpp-edit-modal').removeClass('loading');
+            if (response.success) {
+                $('.cpp-edit-modal-content').html(response.data.html);
+                if(typeof window.cpp_init_media_uploader === 'function') {
+                    window.cpp_init_media_uploader();
+                }
+            } else {
+                $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطا در بارگذاری فرم: ' + response.data + '</p>');
+            }
+        }).fail(function() {
+            $('#cpp-edit-modal').removeClass('loading');
+            $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطای اتصال سرور.</p>');
+        });
+    });
+    
+    // بستن پاپ‌آپ‌ها
+    $(document).on('click', '.cpp-modal-overlay .cpp-close-modal', function() {
+        $(this).closest('.cpp-modal-overlay').hide();
+    });
+
+    // --- ۵. نمایش نمودار ---
+    var chartInstance = null;
+    $(document).on('click', '.cpp-show-chart', function(e) {
+        e.preventDefault();
+        var productId = $(this).data('product-id');
+        var modal = $('#cpp-chart-modal');
+        var chartCanvas = modal.find('#cppPriceChart');
+
+        modal.show();
+        modal.find('.chart-error').remove();
+        chartCanvas.show();
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        $.get(cpp_admin_vars.ajax_url, {
+            action: 'cpp_get_chart_data',
+            product_id: productId
+        }, function(response) {
+            if (response.success && response.data.labels.length > 0) {
+                renderChart(response.data, chartCanvas[0]);
+            } else {
+                chartCanvas.hide().parent().prepend('<p class="chart-error" style="color:red; text-align:center;">تاریخچه قیمت برای این محصول در دسترس نیست.</p>');
+            }
+        }).fail(function() {
+             chartCanvas.hide().parent().prepend('<p class="chart-error" style="color:red; text-align:center;">خطا در بارگذاری داده‌های نمودار.</p>');
+        });
+    });
+
+    function renderChart(chartData, ctx) {
+        var datasets = [{
+            label: 'قیمت پایه', data: chartData.prices, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.3, fill: false, borderWidth: 3
+        }];
+        
+        if(chartData.min_prices && chartData.min_prices.length > 0) {
+            datasets.push({
+                label: 'حداقل قیمت', data: chartData.min_prices, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.1)', tension: 0, borderDash: [5, 5], fill: '+1', pointRadius: 0, borderWidth: 1
+            });
+        }
+        
+        if(chartData.max_prices && chartData.max_prices.length > 0) {
+            datasets.push({
+                label: 'حداکثر قیمت', data: chartData.max_prices, borderColor: 'rgb(54, 162, 235)', backgroundColor: 'rgba(54, 162, 235, 0.1)', tension: 0, borderDash: [5, 5], fill: false, pointRadius: 0, borderWidth: 1
+            });
+        }
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: chartData.labels, datasets: datasets },
+            options: { responsive: true, scales: { y: { beginAtZero: false, title: { display: true, text: 'قیمت' }}, x: { title: { display: true, text: 'تاریخ' }}} }
+        });
+    }
+
+    // --- ۶. مدیریت ذخیره فرم پاپ آپ (فرم ویرایش) ---
+    $(document).on('submit', '#cpp-edit-product-form', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submit_button = form.find('input[type="submit"]');
+
+        submit_button.prop('disabled', true).val('در حال ذخیره...');
+        form.find('.cpp-form-message').remove();
+
+        $.ajax({
+            url: cpp_admin_vars.ajax_url,
+            type: 'POST',
+            data: form.serialize() + '&action=cpp_handle_edit_product_ajax',
+            success: function(response) {
+                if (response.success) {
+                    form.prepend('<div class="cpp-form-message notice notice-success is-dismissible"><p>محصول با موفقیت به‌روزرسانی شد.</p></div>');
+                    setTimeout(function(){
+                         $('#cpp-edit-modal').hide();
+                         window.location.reload(); 
+                    }, 1000); 
+                } else {
+                    submit_button.prop('disabled', false).val('ذخیره تغییرات');
+                    form.prepend('<div class="cpp-form-message notice notice-error is-dismissible"><p>خطا: ' + (response.data || 'خطا در به‌روزرسانی محصول.') + '</p></div>');
+                }
+            },
+            error: function() {
+                submit_button.prop('disabled', false).val('ذخیره تغییرات');
+                form.prepend('<div class="cpp-form-message notice notice-error is-dismissible"><p>خطای اتصال سرور.</p></div>');
+            }
+        });
+    });
+});
