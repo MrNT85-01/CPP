@@ -25,10 +25,6 @@ jQuery(document).ready(function($) {
         mediaUploader.open();
     });
 
-jQuery(document).ready(function($) {
-
-    // ... (کدهای آکاردئون و آپلود عکس بدون تغییر) ...
-
     // --- ۳. ویرایش سریع با دبل کلیک (Quick Edit) - بازنویسی نهایی ---
     $(document).on('dblclick', '.cpp-quick-edit, .cpp-quick-edit-select', function() {
         var cell = $(this);
@@ -117,7 +113,8 @@ jQuery(document).ready(function($) {
 
         $.get(cpp_admin_vars.ajax_url, {
             action: 'cpp_fetch_product_edit_form',
-            id: productId
+            id: productId,
+            security: cpp_admin_vars.nonce // ارسال Nonce برای امنیت
         }, function(response) {
             $('#cpp-edit-modal').removeClass('loading');
             if (response.success) {
