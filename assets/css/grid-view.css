@@ -74,25 +74,18 @@
 .cpp-grid-view-table .col-actions {
     white-space: nowrap;
 }
-.cpp-grid-view-table .col-actions .cpp-order-btn,
-.cpp-grid-view-table .col-actions .cpp-chart-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: inline-block;
-}
-.cpp-grid-view-table .col-actions .cpp-order-btn img,
-.cpp-grid-view-table .col-actions .cpp-chart-btn img {
-    width: 24px;
-    height: 24px;
+
+/* --- شروع تغییر: سایز آیکون‌ها کوچک شد --- */
+.cpp-grid-view-table .col-actions .cpp-icon-btn img {
+    width: 18px; /* سایز جدید و کوچک‌تر */
+    height: 18px;
     opacity: 0.7;
     transition: opacity 0.2s;
 }
-.cpp-grid-view-table .col-actions .cpp-order-btn:hover img,
-.cpp-grid-view-table .col-actions .cpp-chart-btn:hover img {
+.cpp-grid-view-table .col-actions .cpp-icon-btn:hover img {
     opacity: 1;
 }
+/* --- پایان تغییر --- */
 
 /* View More Button */
 .cpp-grid-view-footer {
