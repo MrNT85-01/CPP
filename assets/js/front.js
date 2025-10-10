@@ -59,7 +59,7 @@ jQuery(document).ready(function($) {
             action: 'cpp_get_chart_data',
             product_id: productId
         }, function(response) {
-            if (response.success && response.data.labels.length > 0) {
+            if (response.success) {
                 renderFrontChart(response.data, chartCanvas[0]);
             } else {
                  chartCanvas.hide().parent().prepend('<p class="chart-error">تاریخچه قیمت برای این محصول در دسترس نیست.</p>');
@@ -70,9 +70,13 @@ jQuery(document).ready(function($) {
     });
 
     function renderFrontChart(chartData, ctx) {
-        var datasets = [{
-            label: 'قیمت پایه', data: chartData.prices, borderColor: 'rgb(75, 192, 192)', tension: 0.1, fill: false
-        }];
+        var datasets = [];
+
+        if (chartData.prices && chartData.prices.length > 0) {
+            datasets.push({ 
+                label: 'قیمت پایه', data: chartData.prices, borderColor: 'rgb(75, 192, 192)', tension: 0.1, fill: false 
+            });
+        }
         if (chartData.min_prices && chartData.min_prices.length > 0) {
             datasets.push({ label: 'حداقل قیمت', data: chartData.min_prices, borderColor: 'rgba(255, 99, 132, 0.5)', borderDash: [5, 5], fill: false, pointRadius: 0 });
         }
@@ -93,19 +97,39 @@ jQuery(document).ready(function($) {
     $('.cpp-modal-container').on('click', function(e) {
         e.stopPropagation();
     });
-});
-// --- ۴. مدیریت فیلتر دسته‌بندی در شورت‌کد گرید ---
-$('.cpp-grid-sidebar a').on('click', function(e) {
-    e.preventDefault();
-    $('.cpp-grid-sidebar li').removeClass('active');
-    $(this).parent('li').addClass('active');
+    
+    // --- ۴. مدیریت فیلتر دسته‌بندی در شورت‌کد گرید ---
+    $('.cpp-grid-sidebar a').on('click', function(e) {
+        e.preventDefault();
+        $('.cpp-grid-sidebar li').removeClass('active');
+        $(this).parent('li').addClass('active');
 
-    var catId = $(this).data('cat-id');
+        var catId = $(this).data('cat-id');
 
-    if (catId === 'all') {
-        $('.cpp-grid-row').show();
-    } else {
-        $('.cpp-grid-row').hide();
-        $('.cpp-grid-row[data-cat-id="' + catId + '"]').show();
-    }
+        if (catId === 'all') {
+            $('.cpp-grid-row').show();
+        } else {
+            $('.cpp-grid-row').hide();
+            $('.cpp-grid-row[data-cat-id="' + catId + '"]').show();
+        }
+    });
+
+    // --- ۵. مدیریت فیلتر دسته‌بندی در شورت‌کد جدید (grid-view) ---
+    $('.cpp-grid-view-filters .filter-btn').on('click', function(e){
+        e.preventDefault();
+        var $this = $(this);
+        var catId = $this.data('cat-id');
+
+        // مدیریت کلاس active
+        $('.cpp-grid-view-filters .filter-btn').removeClass('active');
+        $this.addClass('active');
+
+        // نمایش و پنهان کردن ردیف‌ها
+        if (catId === 'all') {
+            $('.cpp-grid-view-table .product-row').show();
+        } else {
+            $('.cpp-grid-view-table .product-row').hide();
+            $('.cpp-grid-view-table .product-row[data-cat-id="' + catId + '"]').show();
+        }
+    });
 });
