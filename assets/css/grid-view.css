@@ -1,0 +1,111 @@
+/* Styles for Grid View Shortcode */
+.cpp-grid-view-wrapper {
+    direction: rtl;
+    font-family: sans-serif;
+    background-color: #f9f9f9;
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid #eee;
+}
+
+/* Filter Buttons */
+.cpp-grid-view-filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+.cpp-grid-view-filters .filter-btn {
+    text-decoration: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    background-color: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+.cpp-grid-view-filters .filter-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+.cpp-grid-view-filters .filter-btn.active {
+    background-color: #ffc107;
+    color: #333;
+    border-color: #ffc107;
+    font-weight: bold;
+}
+
+/* Table Styles */
+.cpp-grid-view-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+.cpp-grid-view-table th,
+.cpp-grid-view-table td {
+    padding: 15px 10px;
+    vertical-align: middle;
+}
+.cpp-grid-view-table thead th {
+    color: #888;
+    font-weight: normal;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
+}
+.cpp-grid-view-table tbody tr.product-row {
+    border-bottom: 1px solid #eee;
+}
+.cpp-grid-view-table tbody tr.product-row:last-child {
+    border-bottom: none;
+}
+.cpp-grid-view-table .col-product-name {
+    font-weight: bold;
+    color: #333;
+}
+.cpp-grid-view-table .col-price {
+    font-weight: bold;
+    color: #0056b3;
+    font-size: 16px;
+}
+.cpp-grid-view-table .col-buy .cpp-order-btn,
+.cpp-grid-view-table .col-chart .cpp-chart-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+.cpp-grid-view-table .col-buy .cpp-order-btn img,
+.cpp-grid-view-table .col-chart .cpp-chart-btn img {
+    width: 24px;
+    height: 24px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.cpp-grid-view-table .col-buy .cpp-order-btn:hover img,
+.cpp-grid-view-table .col-chart .cpp-chart-btn:hover img {
+    opacity: 1;
+}
+
+/* View More Button */
+.cpp-grid-view-footer {
+    text-align: center;
+    margin-top: 25px;
+}
+.cpp-view-more-btn {
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    background-color: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+.cpp-view-more-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
