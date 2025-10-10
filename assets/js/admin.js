@@ -82,40 +82,40 @@ jQuery(document).ready(function($) {
         });
     }
 
-    // --- ۴. منطق پاپ‌آپ ویرایش (برای محصولات و دسته‌بندی‌ها) ---
-    // ویرایش محصول
+    // --- ۴. منطق پاپ‌آپ ویرایش ---
     $(document).on('click', '.cpp-edit-button', function() {
         var productId = $(this).data('product-id');
         openEditModal({ action: 'cpp_fetch_product_edit_form', id: productId });
     });
-
-    // --- شروع تغییر: افزودن رویداد برای دکمه ویرایش دسته‌بندی ---
     $(document).on('click', '.cpp-edit-cat-button', function() {
         var catId = $(this).data('cat-id');
         openEditModal({ action: 'cpp_fetch_category_edit_form', id: catId });
     });
-    // --- پایان تغییر ---
 
     function openEditModal(ajax_data) {
         $('#cpp-edit-modal').addClass('loading').show();
         $('.cpp-edit-modal-content').html('<p style="text-align:center; padding: 20px;">در حال بارگذاری فرم ویرایش...</p>');
-        
         ajax_data.security = cpp_admin_vars.nonce;
 
-        $.get(cpp_admin_vars.ajax_url, ajax_data, function(response) {
-            $('#cpp-edit-modal').removeClass('loading');
-            if (response.success) {
-                $('.cpp-edit-modal-content').html(response.data.html);
-                if(typeof window.cpp_init_media_uploader === 'function') {
-                    window.cpp_init_media_uploader();
+        $.get(cpp_admin_vars.ajax_url, ajax_data)
+            .done(function(response) {
+                $('#cpp-edit-modal').removeClass('loading');
+                if (response.success) {
+                    $('.cpp-edit-modal-content').html(response.data.html);
+                    if(typeof window.cpp_init_media_uploader === 'function') {
+                        window.cpp_init_media_uploader();
+                    }
+                } else {
+                    // --- شروع تغییر: نمایش پیام خطای دقیق از سرور ---
+                    var errorMessage = response.data ? response.data : 'خطای نامشخص.';
+                    $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطا در بارگذاری فرم: ' + errorMessage + '</p>');
+                    // --- پایان تغییر ---
                 }
-            } else {
-                $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطا در بارگذاری فرم: ' + response.data + '</p>');
-            }
-        }).fail(function() {
-            $('#cpp-edit-modal').removeClass('loading');
-            $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطای اتصال سرور.</p>');
-        });
+            })
+            .fail(function() {
+                $('#cpp-edit-modal').removeClass('loading');
+                $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطای اتصال سرور. (ممکن است یک خطای PHP در سرور وجود داشته باشد)</p>');
+            });
     }
     
     $(document).on('click', '.cpp-modal-overlay .cpp-close-modal', function() {
@@ -150,18 +150,14 @@ jQuery(document).ready(function($) {
     }
 
     // --- ۶. مدیریت ذخیره فرم‌های پاپ آپ ---
-    // ذخیره محصول
     $(document).on('submit', '#cpp-edit-product-form', function(e) {
         e.preventDefault();
         submitEditForm($(this), { action: 'cpp_handle_edit_product_ajax' });
     });
-    
-    // --- شروع تغییر: افزودن رویداد برای ذخیره دسته‌بندی ---
     $(document).on('submit', '#cpp-edit-category-form', function(e) {
         e.preventDefault();
         submitEditForm($(this), { action: 'cpp_handle_edit_category_ajax' });
     });
-    // --- پایان تغییر ---
 
     function submitEditForm(form, ajax_data) {
         var submit_button = form.find('input[type="submit"]');
