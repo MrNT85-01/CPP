@@ -65,27 +65,32 @@
     font-weight: bold;
     color: #333;
 }
-.cpp-grid-view-table .col-price {
+.cpp-grid-view-table .col-price,
+.cpp-grid-view-table .col-price-range {
     font-weight: bold;
     color: #0056b3;
     font-size: 16px;
 }
-.cpp-grid-view-table .col-buy .cpp-order-btn,
-.cpp-grid-view-table .col-chart .cpp-chart-btn {
+.cpp-grid-view-table .col-actions {
+    white-space: nowrap;
+}
+.cpp-grid-view-table .col-actions .cpp-order-btn,
+.cpp-grid-view-table .col-actions .cpp-chart-btn {
     background: none;
     border: none;
     cursor: pointer;
     padding: 5px;
+    display: inline-block;
 }
-.cpp-grid-view-table .col-buy .cpp-order-btn img,
-.cpp-grid-view-table .col-chart .cpp-chart-btn img {
+.cpp-grid-view-table .col-actions .cpp-order-btn img,
+.cpp-grid-view-table .col-actions .cpp-chart-btn img {
     width: 24px;
     height: 24px;
     opacity: 0.7;
     transition: opacity 0.2s;
 }
-.cpp-grid-view-table .col-buy .cpp-order-btn:hover img,
-.cpp-grid-view-table .col-chart .cpp-chart-btn:hover img {
+.cpp-grid-view-table .col-actions .cpp-order-btn:hover img,
+.cpp-grid-view-table .col-actions .cpp-chart-btn:hover img {
     opacity: 1;
 }
 
