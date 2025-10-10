@@ -113,8 +113,7 @@ jQuery(document).ready(function($) {
 
         $.get(cpp_admin_vars.ajax_url, {
             action: 'cpp_fetch_product_edit_form',
-            id: productId,
-            security: cpp_admin_vars.nonce // ارسال Nonce برای امنیت
+            id: productId
         }, function(response) {
             $('#cpp-edit-modal').removeClass('loading');
             if (response.success) {
@@ -156,7 +155,7 @@ jQuery(document).ready(function($) {
             action: 'cpp_get_chart_data',
             product_id: productId
         }, function(response) {
-            if (response.success && response.data.labels.length > 0) {
+            if (response.success) {
                 renderChart(response.data, chartCanvas[0]);
             } else {
                 chartCanvas.hide().parent().prepend('<p class="chart-error" style="color:red; text-align:center;">تاریخچه قیمت برای این محصول در دسترس نیست.</p>');
@@ -167,9 +166,13 @@ jQuery(document).ready(function($) {
     });
 
     function renderChart(chartData, ctx) {
-        var datasets = [{
-            label: 'قیمت پایه', data: chartData.prices, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.3, fill: false, borderWidth: 3
-        }];
+        var datasets = [];
+        
+        if(chartData.prices && chartData.prices.length > 0) {
+            datasets.push({
+                label: 'قیمت پایه', data: chartData.prices, borderColor: 'rgb(75, 192, 192)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.3, fill: false, borderWidth: 3
+            });
+        }
         
         if(chartData.min_prices && chartData.min_prices.length > 0) {
             datasets.push({
