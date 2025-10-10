@@ -215,7 +215,7 @@ function cpp_handle_admin_actions() {
 add_action('wp_ajax_cpp_fetch_product_edit_form', 'cpp_fetch_product_edit_form');
 function cpp_fetch_product_edit_form() {
     // برای امنیت بیشتر، Nonce را چک کنید.
-    // check_ajax_referer('cpp_admin_nonce', 'security');
+    check_ajax_referer('cpp_admin_nonce', 'security');
 
     $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     if (!$product_id) {
