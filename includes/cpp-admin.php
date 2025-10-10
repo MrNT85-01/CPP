@@ -10,20 +10,18 @@ function cpp_admin_assets($hook) {
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', [], null, true);
     wp_enqueue_script('cpp-admin-js', CPP_ASSETS_URL . 'js/admin.js', ['jquery', 'wp-i18n', 'chart-js'], CPP_VERSION, true);
     
-    // --- شروع تغییر: افزودن وضعیت‌های سفارش برای جاوا اسکریپت ---
     $order_statuses = [
         'new_order'     => __('سفارش جدید', 'cpp-full'),
         'negotiating'   => __('در حال مذاکره', 'cpp-full'),
         'cancelled'     => __('کنسل شد', 'cpp-full'),
         'completed'     => __('خرید انجام شد', 'cpp-full'),
     ];
-    // --- پایان تغییر ---
 
     wp_localize_script('cpp-admin-js', 'cpp_admin_vars', [
         'ajax_url'      => admin_url('admin-ajax.php'),
         'nonce'         => wp_create_nonce('cpp_admin_nonce'),
         'edit_url_base' => admin_url('admin.php?page=custom-prices-product-edit&id='),
-        'order_statuses' => $order_statuses, // ارسال لیست وضعیت‌ها
+        'order_statuses' => $order_statuses,
     ]);
     
     wp_enqueue_style('cpp-admin-css', CPP_ASSETS_URL . 'css/admin.css', [], CPP_VERSION);
@@ -58,7 +56,6 @@ function cpp_admin_assets($hook) {
     ', 'after');
 }
 
-// --- ۲. تعریف منوهای مدیریت (بدون تغییر) ---
 add_action('admin_menu', 'cpp_admin_menu');
 function cpp_admin_menu() {
     $main_page = add_menu_page( __('مدیریت قیمت‌ها و سفارشات', 'cpp-full'), __('مدیریت قیمت', 'cpp-full'), 'manage_options', 'custom-prices-products', 'cpp_products_page', 'dashicons-tag', 30 );
@@ -69,18 +66,20 @@ function cpp_admin_menu() {
     add_submenu_page( null, __('ویرایش محصول', 'cpp-full'), __('ویرایش محصول', 'cpp-full'), 'manage_options', 'custom-prices-product-edit', 'cpp_product_edit_page' );
 }
 
-// --- ۳. پیاده‌سازی صفحات منو و پاپ‌آپ ویرایش ---
+// در این تابع، پاپ آپ ویرایش برای هر دو صفحه محصولات و دسته‌بندی‌ها اضافه می‌شود
 function cpp_products_page() { 
     include CPP_TEMPLATES_DIR . 'products.php'; 
     echo '<div id="cpp-edit-modal" class="cpp-modal-overlay" style="display: none;"><div class="cpp-modal-container"><span class="cpp-close-modal">×</span><div class="cpp-edit-modal-content"></div></div></div>';
 }
-function cpp_categories_page() { include CPP_TEMPLATES_DIR . 'categories.php'; }
+function cpp_categories_page() { 
+    include CPP_TEMPLATES_DIR . 'categories.php'; 
+    echo '<div id="cpp-edit-modal" class="cpp-modal-overlay" style="display: none;"><div class="cpp-modal-container"><span class="cpp-close-modal">×</span><div class="cpp-edit-modal-content"></div></div></div>';
+}
 function cpp_orders_page() { include CPP_TEMPLATES_DIR . 'orders.php'; }
 function cpp_settings_page() { include CPP_TEMPLATES_DIR . 'settings.php'; }
 function cpp_shortcodes_page() { include CPP_TEMPLATES_DIR . 'shortcodes.php'; }
 function cpp_product_edit_page() { include CPP_TEMPLATES_DIR . 'product-edit.php'; }
 
-// --- ۴. مدیریت فرم‌ها و حذف آیتم‌ها ---
 add_action('admin_init', 'cpp_handle_admin_actions');
 function cpp_handle_admin_actions() {
     global $wpdb;
@@ -113,18 +112,17 @@ function cpp_handle_admin_actions() {
         $db_table = '';
         $message_success = '';
         $message_failed = '';
-
         if ($page == 'custom-prices-categories' && wp_verify_nonce($_GET['_wpnonce'], 'cpp_delete_cat_' . $id)) { $db_table = CPP_DB_CATEGORIES; $message_success = 'category_deleted'; $message_failed = 'category_delete_failed';} 
         elseif ($page == 'custom-prices-products' && wp_verify_nonce($_GET['_wpnonce'], 'cpp_delete_product_' . $id)) { $db_table = CPP_DB_PRODUCTS; $message_success = 'product_deleted'; $message_failed = 'product_delete_failed';} 
         elseif ($page == 'custom-prices-orders' && wp_verify_nonce($_GET['_wpnonce'], 'cpp_delete_order_' . $id)) { $db_table = CPP_DB_ORDERS; $message_success = 'order_deleted'; $message_failed = 'order_delete_failed';}
-        
         if ($db_table) { $deleted = $wpdb->delete($db_table, array('id' => $id)); }
         $redirect_url = add_query_arg('cpp_message', $deleted ? $message_success : $message_failed, $redirect_url);
         wp_redirect($redirect_url); exit;
     }
 }
 
-// --- ۵. AJAX برای پاپ آپ ویرایش ---
+
+// --- AJAX برای محصولات ---
 add_action('wp_ajax_cpp_fetch_product_edit_form', 'cpp_fetch_product_edit_form');
 function cpp_fetch_product_edit_form() {
     check_ajax_referer('cpp_admin_nonce', 'security');
@@ -136,7 +134,6 @@ function cpp_fetch_product_edit_form() {
     wp_send_json_success(['html' => $html]);
 }
 
-// --- ۶. AJAX برای ذخیره فرم پاپ آپ ---
 add_action('wp_ajax_cpp_handle_edit_product_ajax', 'cpp_handle_edit_product_ajax');
 function cpp_handle_edit_product_ajax() {
     global $wpdb;
@@ -159,7 +156,48 @@ function cpp_handle_edit_product_ajax() {
     }
 }
 
-// --- ۷. AJAX برای ویرایش سریع ---
+// --- شروع تغییر: افزودن توابع AJAX برای ویرایش دسته‌بندی ---
+add_action('wp_ajax_cpp_fetch_category_edit_form', 'cpp_fetch_category_edit_form');
+function cpp_fetch_category_edit_form() {
+    check_ajax_referer('cpp_admin_nonce', 'security');
+    // برای ارسال متغیر به فایل قالب، از $_GET استفاده می‌کنیم
+    $_GET['id'] = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    if (!$_GET['id']) {
+        wp_send_json_error(__('شناسه دسته‌بندی نامعتبر است.', 'cpp-full'));
+    }
+    ob_start();
+    include CPP_TEMPLATES_DIR . 'category-edit.php';
+    $html = ob_get_clean();
+    wp_send_json_success(['html' => $html]);
+}
+
+add_action('wp_ajax_cpp_handle_edit_category_ajax', 'cpp_handle_edit_category_ajax');
+function cpp_handle_edit_category_ajax() {
+    global $wpdb;
+    if (!isset($_POST['cpp_edit_cat_nonce']) || !wp_verify_nonce($_POST['cpp_edit_cat_nonce'], 'cpp_edit_cat_action')) {
+        wp_send_json_error(__('بررسی امنیتی ناموفق بود.', 'cpp-full'));
+    }
+    $cat_id = isset($_POST['category_id']) ? intval($_POST['category_id']) : 0;
+    if (!$cat_id) {
+        wp_send_json_error(__('شناسه دسته‌بندی نامعتبر است.', 'cpp-full'));
+    }
+    $data = [
+        'name' => sanitize_text_field($_POST['name']),
+        'slug' => sanitize_title($_POST['slug']),
+        'image_url' => esc_url_raw($_POST['image_url']),
+    ];
+    if (empty($data['slug'])) $data['slug'] = sanitize_title($data['name']);
+
+    $updated = $wpdb->update(CPP_DB_CATEGORIES, $data, ['id' => $cat_id]);
+
+    if ($updated !== false) {
+        wp_send_json_success(__('دسته‌بندی با موفقیت به‌روزرسانی شد.', 'cpp-full'));
+    } else {
+        wp_send_json_error(__('خطا در به‌روزرسانی دسته‌بندی.', 'cpp-full'));
+    }
+}
+// --- پایان تغییر ---
+
 add_action('wp_ajax_cpp_quick_update', 'cpp_quick_update');
 function cpp_quick_update() {
     check_ajax_referer('cpp_admin_nonce', 'security'); 
@@ -167,25 +205,17 @@ function cpp_quick_update() {
     $id    = intval($_POST['id']);
     $field = sanitize_key($_POST['field']);
     $table_type = sanitize_key($_POST['table_type']);
-    
     if ($field === 'description' || $field === 'admin_note') { $value = sanitize_textarea_field($_POST['value']); } 
     elseif ($field === 'is_active') { $value = intval($_POST['value']); } 
     else { $value = sanitize_text_field($_POST['value']); }
-
     if (!$id) wp_send_json_error('شناسه نامعتبر است.');
-    
     $table = '';
     $allowed_fields = [];
-    
-    // --- شروع تغییر: افزودن فیلد status به لیست مجاز سفارشات ---
     if ($table_type === 'products') { $table = CPP_DB_PRODUCTS; $allowed_fields = ['name', 'price', 'min_price', 'max_price', 'product_type', 'unit', 'load_location', 'is_active', 'description', 'image_url', 'cat_id']; } 
     elseif ($table_type === 'orders') { $table = CPP_DB_ORDERS; $allowed_fields = ['admin_note', 'status']; } 
     elseif ($table_type === 'categories') { $table = CPP_DB_CATEGORIES; $allowed_fields = ['name', 'slug', 'image_url']; } 
     else { wp_send_json_error('نوع جدول نامعتبر است.'); }
-    // --- پایان تغییر ---
-
     if (!in_array($field, $allowed_fields)) { wp_send_json_error('فیلد مورد نظر برای ویرایش نامعتبر است.'); }
-
     $data_to_update = [$field => $value];
     $response_data = ['message' => 'با موفقیت به‌روزرسانی شد.'];
     if ($table_type === 'products' && $field === 'price') {
@@ -195,15 +225,11 @@ function cpp_quick_update() {
             $response_data['new_time'] = date_i18n('Y/m/d H:i:s', current_time('timestamp'));
         }
     }
-    
     $updated = $wpdb->update($table, $data_to_update, ['id' => $id]);
-    
     if ($updated === false) { wp_send_json_error('خطا در به‌روزرسانی دیتابیس.'); }
-    
     wp_send_json_success($response_data);
 }
 
-// --- ۸. سازگاری با المنتور ---
 add_action('elementor/frontend/after_register_styles', 'cpp_enqueue_styles_elementor');
 function cpp_enqueue_styles_elementor() {
     if (!wp_style_is('cpp-front-css', 'enqueued')) {
