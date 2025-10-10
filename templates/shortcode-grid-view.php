@@ -1,10 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-// واکشی تنظیمات برای بررسی نمایش قیمت پایه
+// واکشی تنظیمات و URL آیکون‌ها
 $disable_base_price = get_option('cpp_disable_base_price', 0);
-
-// URL آیکون‌ها
 $cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
 $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
 ?>
@@ -64,10 +62,10 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
                     </td>
 
                     <td class="col-actions">
-                        <button class="cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>">
+                        <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>">
                             <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>">
                         </button>
-                        <button class="cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>">
+                        <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>">
                             <img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>">
                         </button>
                     </td>
