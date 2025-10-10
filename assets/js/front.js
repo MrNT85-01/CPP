@@ -69,25 +69,22 @@ jQuery(document).ready(function($) {
         frontChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartData.labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false } });
     }
 
-    // --- بستن همه پاپ‌آپ‌ها ---
-    $(document).on('click', '.cpp-modal-close, .cpp-modal-overlay', function(e) {
-        if ($(e.target).is('.cpp-modal-close') || $(e.target).is('.cpp-modal-overlay')) {
-            $('.cpp-modal-overlay').hide();
-        }
-    });
-    $('.cpp-modal-container').on('click', function(e) { e.stopPropagation(); });
-    
-    // --- مدیریت فیلتر دسته‌بندی در شورت‌کد گرید ---
-    $('.cpp-grid-sidebar a').on('click', function(e) {
-        e.preventDefault();
-        $('.cpp-grid-sidebar li').removeClass('active');
-        $(this).parent('li').addClass('active');
-        var catId = $(this).data('cat-id');
-        if (catId === 'all') { $('.cpp-grid-row').show(); } 
-        else { $('.cpp-grid-row').hide(); $('.cpp-grid-row[data-cat-id="' + catId + '"]').show(); }
+    // --- شروع تغییر: اصلاح منطق بستن پاپ‌آپ‌ها ---
+    // بستن با کلیک روی دکمه ضربدر
+    $(document).on('click', '.cpp-modal-close', function() {
+        $(this).closest('.cpp-modal-overlay').hide();
     });
 
-    // --- بازگرداندن فیلتر برای شورت‌کد grid-view ---
+    // بستن با کلیک روی پس‌زمینه تیره (overlay)
+    $(document).on('click', '.cpp-modal-overlay', function(e) {
+        // این شرط چک می‌کند که کلیک مستقیما روی خود پس‌زمینه بوده، نه روی محتوای داخل پاپ‌آپ
+        if ($(e.target).is('.cpp-modal-overlay')) {
+            $(this).hide();
+        }
+    });
+    // --- پایان تغییر ---
+    
+    // فیلتر برای شورت‌کد [cpp_products_grid_view]
     $('.cpp-grid-view-filters .filter-btn').on('click', function(e){
         e.preventDefault();
         var $this = $(this);
