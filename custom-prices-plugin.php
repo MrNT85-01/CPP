@@ -39,26 +39,49 @@ add_shortcode('cpp_products_list', 'cpp_products_list_shortcode');
 function cpp_products_list_shortcode($atts) {
     $atts = shortcode_atts( array( 'cat_id' => '', 'ids' => '', 'status' => '1' ), $atts, 'cpp_products_list' );
     global $wpdb;
-    $where = 'WHERE 1=1';
+    
+    $where_clauses = [];
+    $query_params = [];
+
     if ($atts['status'] !== 'all') {
-        $where .= $wpdb->prepare(' AND p.is_active = %d', intval($atts['status']));
+        $where_clauses[] = 'p.is_active = %d';
+        $query_params[] = intval($atts['status']);
     }
+
     if (!empty($atts['cat_id'])) {
         $cat_ids = array_map('intval', explode(',', $atts['cat_id']));
-        $cat_ids_in = implode(',', $cat_ids);
-        if (!empty($cat_ids_in)) { $where .= " AND p.cat_id IN ({$cat_ids_in})"; }
+        if (!empty($cat_ids)) {
+            $placeholders = implode(', ', array_fill(0, count($cat_ids), '%d'));
+            $where_clauses[] = "p.cat_id IN ({$placeholders})";
+            $query_params = array_merge($query_params, $cat_ids);
+        }
     }
+
     if (!empty($atts['ids'])) {
         $product_ids = array_map('intval', explode(',', $atts['ids']));
-        $product_ids_in = implode(',', $product_ids);
-        if (!empty($product_ids_in)) { $where .= " AND p.id IN ({$product_ids_in})"; }
+        if (!empty($product_ids)) {
+            $placeholders = implode(', ', array_fill(0, count($product_ids), '%d'));
+            $where_clauses[] = "p.id IN ({$placeholders})";
+            $query_params = array_merge($query_params, $product_ids);
+        }
     }
-    $products = $wpdb->get_results("SELECT p.*, c.name as category_name FROM " . CPP_DB_PRODUCTS . " p LEFT JOIN " . CPP_DB_CATEGORIES . " c ON p.cat_id = c.id {$where} ORDER BY p.id DESC");
+    
+    $where_sql = 'WHERE 1=1';
+    if (!empty($where_clauses)) {
+        $where_sql .= ' AND ' . implode(' AND ', $where_clauses);
+    }
+    
+    $query = "SELECT p.*, c.name as category_name FROM " . CPP_DB_PRODUCTS . " p LEFT JOIN " . CPP_DB_CATEGORIES . " c ON p.cat_id = c.id {$where_sql} ORDER BY p.id DESC";
+    
+    $products = $wpdb->get_results($wpdb->prepare($query, $query_params));
+
     if (!$products) { return '<p class="cpp-no-products">محصولی برای نمایش یافت نشد.</p>'; }
+
     ob_start();
     include CPP_TEMPLATES_DIR . 'shortcode-list.php'; 
     return ob_get_clean();
 }
+
 
 add_action('wp_enqueue_scripts', 'cpp_front_assets');
 function cpp_front_assets() {
