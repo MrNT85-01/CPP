@@ -1,7 +1,10 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+// واکشی تنظیمات و URL آیکون‌ها
 $disable_base_price = get_option('cpp_disable_base_price', 0);
+$cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
+$chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
 ?>
 
 <div class="cpp-products-list-container">
@@ -45,9 +48,13 @@ $disable_base_price = get_option('cpp_disable_base_price', 0);
                         <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
                     <?php endif; ?>
                 </td>
-                <td>
-                    <button class="cpp-order-btn" data-product-id="<?php echo $product->id; ?>" data-product-name="<?php echo esc_attr($product->name); ?>"><?php _e('ثبت سفارش', 'cpp-full'); ?></button>
-                    <button class="cpp-chart-btn" data-product-id="<?php echo $product->id; ?>"><?php _e('نمودار', 'cpp-full'); ?></button>
+                <td class="cpp-actions-cell">
+                    <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo $product->id; ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('ثبت سفارش', 'cpp-full'); ?>">
+                        <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('ثبت سفارش', 'cpp-full'); ?>">
+                    </button>
+                    <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo $product->id; ?>" title="<?php _e('نمودار', 'cpp-full'); ?>">
+                         <img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>">
+                    </button>
                 </td>
             </tr>
         <?php endforeach; ?>
