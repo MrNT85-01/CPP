@@ -9,28 +9,14 @@ $categories = CPP_Core::get_all_categories();
     <h1><?php _e('مدیریت دسته‌بندی‌ها', 'cpp-full'); ?></h1>
 
     <?php 
-    // نمایش پیام‌های پس از عملیات
     if (isset($_GET['cpp_message'])) {
         $message_key = sanitize_key($_GET['cpp_message']);
         $messages = [
-            'category_added' => [
-                'type' => 'success',
-                'text' => __('دسته‌بندی جدید با موفقیت اضافه شد.', 'cpp-full')
-            ],
-            'category_add_failed' => [
-                'type' => 'error',
-                'text' => __('خطا در اضافه کردن دسته‌بندی. لطفاً دوباره امتحان کنید.', 'cpp-full')
-            ],
-            'category_deleted' => [
-                'type' => 'success',
-                'text' => __('دسته‌بندی با موفقیت حذف شد.', 'cpp-full')
-            ],
-            'category_delete_failed' => [
-                'type' => 'error',
-                'text' => __('خطا در حذف دسته‌بندی.', 'cpp-full')
-            ],
+            'category_added' => [ 'type' => 'success', 'text' => __('دسته‌بندی جدید با موفقیت اضافه شد.', 'cpp-full') ],
+            'category_add_failed' => [ 'type' => 'error', 'text' => __('خطا در اضافه کردن دسته‌بندی.', 'cpp-full') ],
+            'category_deleted' => [ 'type' => 'success', 'text' => __('دسته‌بندی با موفقیت حذف شد.', 'cpp-full') ],
+            'category_delete_failed' => [ 'type' => 'error', 'text' => __('خطا در حذف دسته‌بندی.', 'cpp-full') ],
         ];
-
         if (isset($messages[$message_key])) {
             echo '<div class="notice notice-' . $messages[$message_key]['type'] . ' is-dismissible"><p>' . $messages[$message_key]['text'] . '</p></div>';
         }
@@ -38,9 +24,7 @@ $categories = CPP_Core::get_all_categories();
     ?>
     
     <div class="notice notice-info">
-        <p>
-            <?php _e('برای ویرایش سریع نام دسته‌بندی، روی سلول مورد نظر **دوبار کلیک (Double Click)** کنید.', 'cpp-full'); ?>
-        </p>
+        <p><?php _e('برای ویرایش سریع نام، روی سلول مورد نظر **دوبار کلیک** کنید یا از دکمه **ویرایش** برای باز کردن فرم کامل استفاده نمایید.', 'cpp-full'); ?></p>
     </div>
 
     <div class="cpp-accordion-wrap">
@@ -60,7 +44,7 @@ $categories = CPP_Core::get_all_categories();
                     <tr>
                         <th><?php _e('عکس دسته‌بندی', 'cpp-full'); ?></th>
                         <td>
-                            <input type="text" name="image_url" id="category_image_url" class="regular-text" placeholder="<?php _e('آدرس تصویر', 'cpp-full'); ?>">
+                            <input type="text" name="image_url" id="category_image_url" class="regular-text">
                             <button type="button" class="button cpp-upload-btn"><?php _e('انتخاب تصویر', 'cpp-full'); ?></button>
                             <div class="cpp-image-preview"></div>
                         </td>
@@ -77,8 +61,8 @@ $categories = CPP_Core::get_all_categories();
             <tr>
                 <th scope="col">ID</th>
                 <th scope="col"><?php _e('عکس', 'cpp-full'); ?></th>
-                <th scope="col"><?php _e('نام دسته‌بندی (دبل کلیک)', 'cpp-full'); ?></th>
-                <th scope="col"><?php _e('اسلاگ', 'cpp-full'); ?></th>
+                <th scope="col"><?php _e('نام (دبل کلیک)', 'cpp-full'); ?></th>
+                <th scope="col"><?php _e('اسلاگ (دبل کلیک)', 'cpp-full'); ?></th>
                 <th scope="col"><?php _e('تاریخ ایجاد', 'cpp-full'); ?></th> 
                 <th scope="col"><?php _e('عملیات', 'cpp-full'); ?></th>
             </tr>
@@ -92,6 +76,7 @@ $categories = CPP_Core::get_all_categories();
                 <td class="cpp-quick-edit" data-id="<?php echo $cat->id; ?>" data-field="slug" data-table-type="categories"><?php echo esc_html($cat->slug); ?></td>
                 <td><?php echo date_i18n('Y/m/d H:i:s', strtotime($cat->created)); ?></td>
                 <td>
+                    <button type="button" class="button button-primary button-small cpp-edit-cat-button" data-cat-id="<?php echo $cat->id; ?>"><?php _e('ویرایش', 'cpp-full'); ?></button>
                     <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=custom-prices-categories&action=delete&id=' . $cat->id), 'cpp_delete_cat_' . $cat->id); ?>" class="button button-small" onclick="return confirm('<?php _e('آیا مطمئنید؟', 'cpp-full'); ?>')"><?php _e('حذف', 'cpp-full'); ?></a>
                 </td>
             </tr>
