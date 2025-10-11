@@ -8,6 +8,10 @@ $status_options = [ '1' => __('فعال', 'cpp-full'), '0' => __('غیرفعال
 $default_image_url = CPP_ASSETS_URL . 'images/default-product.png';
 $site_icon = get_site_icon_url(100);
 if ($site_icon) { $default_image_url = $site_icon; }
+
+// --- شروع تغییر: واکشی تنظیمات قیمت پایه ---
+$disable_base_price = get_option('cpp_disable_base_price', 0);
+// --- پایان تغییر ---
 ?>
 
 <div class="wrap">
@@ -60,6 +64,8 @@ if ($site_icon) { $default_image_url = $site_icon; }
                             </select>
                         </td>
                     </tr>
+                    
+                    <?php if (!$disable_base_price) : ?>
                     <tr>
                         <th><?php _e('قیمت پایه/استاندارد', 'cpp-full'); ?></th><td><input type="text" name="price" required class="regular-text"></td>
                         <th><?php _e('بازه قیمت (حداقل - حداکثر)', 'cpp-full'); ?></th>
@@ -68,6 +74,16 @@ if ($site_icon) { $default_image_url = $site_icon; }
                             <input type="text" name="max_price" class="small-text" placeholder="<?php _e('حداکثر', 'cpp-full'); ?>">
                         </td>
                     </tr>
+                    <?php else: // اگر قیمت پایه غیرفعال بود، یک فیلد مخفی برای آن ارسال می‌کنیم تا خطا ندهد ?>
+                    <input type="hidden" name="price" value="0">
+                    <tr>
+                        <th><?php _e('بازه قیمت (حداقل - حداکثر)', 'cpp-full'); ?></th>
+                        <td colspan="3">
+                            <input type="text" name="min_price" class="small-text" placeholder="<?php _e('حداقل', 'cpp-full'); ?>"> -
+                            <input type="text" name="max_price" class="small-text" placeholder="<?php _e('حداکثر', 'cpp-full'); ?>">
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                     <tr>
                         <th><?php _e('عکس محصول', 'cpp-full'); ?></th>
                         <td colspan="3">
@@ -95,7 +111,10 @@ if ($site_icon) { $default_image_url = $site_icon; }
                 <th scope="col"><?php _e('نوع (دبل کلیک)', 'cpp-full'); ?></th>
                 <th scope="col"><?php _e('واحد (دبل کلیک)', 'cpp-full'); ?></th>
                 <th scope="col"><?php _e('بارگیری (دبل کلیک)', 'cpp-full'); ?></th>
+                
+                <?php if (!$disable_base_price) : ?>
                 <th scope="col"><?php _e('قیمت پایه (دبل کلیک)', 'cpp-full'); ?></th>
+                <?php endif; ?>
                 <th scope="col"><?php _e('بازه قیمت (دبل کلیک)', 'cpp-full'); ?></th>
                 <th scope="col"><?php _e('فعال؟', 'cpp-full'); ?></th> 
                 <th scope="col"><?php _e('آخرین آپدیت', 'cpp-full'); ?></th> 
@@ -114,7 +133,10 @@ if ($site_icon) { $default_image_url = $site_icon; }
                 <td class="cpp-quick-edit" data-id="<?php echo $product->id; ?>" data-field="product_type" data-table-type="products"><?php echo esc_html($product->product_type); ?></td>
                 <td class="cpp-quick-edit" data-id="<?php echo $product->id; ?>" data-field="unit" data-table-type="products"><?php echo esc_html($product->unit); ?></td>
                 <td class="cpp-quick-edit" data-id="<?php echo $product->id; ?>" data-field="load_location" data-table-type="products"><?php echo esc_html($product->load_location); ?></td>
+                
+                <?php if (!$disable_base_price) : ?>
                 <td class="cpp-quick-edit" data-id="<?php echo $product->id; ?>" data-field="price" data-table-type="products"><?php echo esc_html($product->price); ?></td>
+                <?php endif; ?>
                 <td>
                     <span class="cpp-quick-edit" data-id="<?php echo $product->id; ?>" data-field="min_price" data-table-type="products"><?php echo esc_html($product->min_price); ?></span> -
                     <span class="cpp-quick-edit" data-id="<?php echo $product->id; ?>" data-field="max_price" data-table-type="products"><?php echo esc_html($product->max_price); ?></span>
