@@ -17,6 +17,10 @@ if (!$product) {
 $categories = CPP_Core::get_all_categories(); 
 $default_image_url = get_site_icon_url(100) ? get_site_icon_url(100) : CPP_ASSETS_URL . 'images/default-product.png';
 $img_src = esc_url($product->image_url) ? esc_url($product->image_url) : $default_image_url;
+
+// --- شروع تغییر: واکشی تنظیمات قیمت پایه ---
+$disable_base_price = get_option('cpp_disable_base_price', 0);
+// --- پایان تغییر ---
 ?>
 
 <div class="wrap">
@@ -70,6 +74,8 @@ $img_src = esc_url($product->image_url) ? esc_url($product->image_url) : $defaul
                     </select>
                 </td>
             </tr>
+
+            <?php if (!$disable_base_price) : ?>
             <tr>
                 <th><?php _e('قیمت پایه/استاندارد', 'cpp-full'); ?></th>
                 <td><input type="text" name="price" required class="regular-text" value="<?php echo esc_attr($product->price); ?>"></td>
@@ -80,6 +86,17 @@ $img_src = esc_url($product->image_url) ? esc_url($product->image_url) : $defaul
                     <input type="text" name="max_price" class="small-text" value="<?php echo esc_attr($product->max_price); ?>">
                 </td>
             </tr>
+            <?php else: ?>
+            <input type="hidden" name="price" value="<?php echo esc_attr($product->price); ?>">
+             <tr>
+                <th><?php _e('بازه قیمت (حداقل - حداکثر)', 'cpp-full'); ?></th>
+                <td colspan="3">
+                    <input type="text" name="min_price" class="small-text" value="<?php echo esc_attr($product->min_price); ?>">
+                    -
+                    <input type="text" name="max_price" class="small-text" value="<?php echo esc_attr($product->max_price); ?>">
+                </td>
+            </tr>
+            <?php endif; ?>
             <tr>
                 <th><?php _e('عکس محصول', 'cpp-full'); ?></th>
                 <td colspan="3">
