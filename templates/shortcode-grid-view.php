@@ -7,8 +7,8 @@ $cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
 $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
 ?>
 
-<div class="cpp-grid-view-wrapper">
-    <?php if (!empty($categories)) : ?>
+<div class="cpp-grid-view-wrapper" id="<?php echo esc_attr($unique_id); ?>">
+<?php if (!empty($categories)) : ?>
         <div class="cpp-grid-view-filters">
             <a href="#" class="filter-btn active" data-cat-id="all"><?php _e('همه دسته‌ها', 'cpp-full'); ?></a>
             <?php foreach ($categories as $cat) : ?>
@@ -51,7 +51,6 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
                         ?>
                     </td>
                     <?php endif; ?>
-
                      <td class="col-price-range">
                         <?php if (!empty($product->min_price) && !empty($product->max_price)) : ?>
                             <?php echo esc_html($product->min_price); ?> - <?php echo esc_html($product->max_price); ?>
@@ -59,7 +58,6 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
                             <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
                         <?php endif; ?>
                     </td>
-
                     <td class="col-actions">
                         <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>">
                             <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>">
@@ -80,6 +78,6 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
     <?php if (count($products) < $total_products) : ?>
     <div class="cpp-grid-view-footer">
         <button class="cpp-view-more-btn" data-page="0" data-show-date="true"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></button>
-        </div>
+    </div>
     <?php endif; ?>
 </div>
