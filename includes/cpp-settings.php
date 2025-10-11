@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) exit;
 add_action('admin_init', 'cpp_register_settings_and_fields');
 
 function cpp_register_settings_and_fields() {
-    // === ثبت تنظیمات ===
+    // === ثبت گروه‌های تنظیمات برای هر تب ===
     register_setting('cpp_general_settings_grp', 'cpp_disable_base_price');
     register_setting('cpp_general_settings_grp', 'cpp_products_per_page');
 
@@ -26,22 +26,24 @@ function cpp_register_settings_and_fields() {
     register_setting('cpp_notification_settings_grp', 'cpp_admin_phone');
     register_setting('cpp_notification_settings_grp', 'cpp_sms_text_template');
 
-    // === بخش‌های تنظیمات (برای هر تب) ===
+    // === تعریف بخش‌ها (Sections) برای هر تب ===
     add_settings_section('cpp_general_section', __('تنظیمات عمومی', 'cpp-full'), null, 'cpp_general_settings_page');
     add_settings_section('cpp_shortcode_section', __('تنظیمات شورت‌کدها', 'cpp-full'), null, 'cpp_shortcode_settings_page');
-    add_settings_section('cpp_notification_section', __('تنظیمات اعلان‌ها', 'cpp-full'), null, 'cpp_notification_settings_page');
+    // بخش اعلان‌ها نیازی به section جدا ندارد چون فیلدها مستقیما در قالب نوشته شده‌اند
 
-    // === فیلدهای تنظیمات ===
+    // === تعریف فیلدها و اتصال آن‌ها به بخش‌ها ===
+    // --- تب عمومی ---
     add_settings_field('cpp_disable_base_price', __('غیرفعال کردن قیمت پایه', 'cpp-full'), 'cpp_disable_base_price_callback', 'cpp_general_settings_page', 'cpp_general_section');
     add_settings_field('cpp_products_per_page', __('تعداد محصولات در هر بار بارگذاری', 'cpp-full'), 'cpp_products_per_page_callback', 'cpp_general_settings_page', 'cpp_general_section');
 
+    // --- تب شورت‌کدها ---
     add_settings_field('cpp_grid_with_date_show_image', __('نمایش تصویر (شورت‌کد با تاریخ)', 'cpp-full'), 'cpp_grid_with_date_show_image_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_no_date_show_image', __('نمایش تصویر (شورت‌کد بدون تاریخ)', 'cpp-full'), 'cpp_grid_no_date_show_image_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_with_date_button_color', __('رنگ دکمه (شورت‌کد با تاریخ)', 'cpp-full'), 'cpp_grid_with_date_button_color_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_no_date_button_color', __('رنگ دکمه (شورت‌کد بدون تاریخ)', 'cpp-full'), 'cpp_grid_no_date_button_color_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
 }
 
-// === توابع Callback برای رندر کردن فیلدها ===
+// === توابع Callback برای نمایش HTML هر فیلد ===
 function cpp_disable_base_price_callback() {
     echo '<input type="checkbox" name="cpp_disable_base_price" value="1" ' . checked(1, get_option('cpp_disable_base_price'), false) . ' />';
     echo '<p class="description">' . __('با فعال کردن این گزینه، فیلد "قیمت پایه" در تمام بخش‌های افزونه مخفی می‌شود.', 'cpp-full') . '</p>';
