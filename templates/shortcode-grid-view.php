@@ -10,7 +10,7 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
 <div class="cpp-grid-view-wrapper">
     <?php if (!empty($categories)) : ?>
         <div class="cpp-grid-view-filters">
-            <a href="#" class="filter-btn active" data-cat-id="all">همه دسته‌ها</a>
+            <a href="#" class="filter-btn active" data-cat-id="all"><?php _e('همه دسته‌ها', 'cpp-full'); ?></a>
             <?php foreach ($categories as $cat) : ?>
                 <a href="#" class="filter-btn" data-cat-id="<?php echo esc_attr($cat->id); ?>"><?php echo esc_html($cat->name); ?></a>
             <?php endforeach; ?>
@@ -39,8 +39,7 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
                     <td><?php echo esc_html($product->product_type); ?></td>
                     <td><?php echo esc_html($product->unit); ?></td>
                     <td><?php echo esc_html($product->load_location); ?></td>
-                    <td><?php echo esc_html(date_i18n('Y/m/d', strtotime($product->last_updated_at))); ?></td>
-                    
+                    <td><?php echo esc_html(date_i18n('Y/m/d H:i', strtotime($product->last_updated_at))); ?></td>
                     <?php if (!$disable_base_price) : ?>
                     <td class="col-price">
                         <?php 
@@ -80,7 +79,7 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
 
     <?php if (count($products) < $total_products) : ?>
     <div class="cpp-grid-view-footer">
-        <button class="cpp-view-more-btn" data-page="0"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></button>
-    </div>
+        <button class="cpp-view-more-btn" data-page="0" data-show-date="true"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></button>
+        </div>
     <?php endif; ?>
-    </div>
+</div>
