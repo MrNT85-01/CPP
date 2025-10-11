@@ -15,8 +15,10 @@ function cpp_register_settings() {
     register_setting('cpp_full_settings_grp', 'cpp_email_body_template');
     register_setting('cpp_full_settings_grp', 'cpp_disable_base_price'); 
     
-    // --- شروع تغییر: افزودن تنظیم تعداد محصولات ---
     register_setting('cpp_full_settings_grp', 'cpp_products_per_page');
+
+    // --- شروع تغییر: افزودن تنظیم رنگ دکمه ---
+    register_setting('cpp_full_settings_grp', 'cpp_grid_button_color');
     // --- پایان تغییر ---
 
     // گروه تنظیمات پیامک
