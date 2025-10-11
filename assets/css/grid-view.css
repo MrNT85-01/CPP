@@ -39,9 +39,7 @@
 }
 
 .cpp-grid-view-filters .filter-btn.active {
-    background-color: var(--cpp-active-filter-color, #ffc107);
     color: #333;
-    border-color: var(--cpp-active-filter-color, #ffc107);
     font-weight: bold;
 }
 
@@ -68,10 +66,24 @@
 .cpp-grid-view-table tbody tr.product-row:last-child {
     border-bottom: none;
 }
+
+/* استایل برای ستون نام محصول (حاوی تصویر و متن) */
 .cpp-grid-view-table .col-product-name {
     font-weight: bold;
     color: #333;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: right;
 }
+.cpp-grid-view-table .col-product-name img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
 .cpp-grid-view-table .col-price,
 .cpp-grid-view-table .col-price-range {
     font-weight: bold;
