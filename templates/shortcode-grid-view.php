@@ -72,15 +72,15 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
                 </tr>
             <?php endforeach; else: ?>
                 <tr>
-                    <td colspan="<?php echo $disable_base_price ? '8' : '9'; ?>"><?php _e('محصولی برای نمایش یافت نشد.', 'cpp-full'); ?></td>
+                    <td colspan="<?php echo $disable_base_price ? '7' : '8'; ?>"><?php _e('محصولی برای نمایش یافت نشد.', 'cpp-full'); ?></td>
                 </tr>
             <?php endif; ?>
         </tbody>
     </table>
 
-    <?php if(!empty($atts['more_link'])): ?>
+    <?php if (count($products) < $total_products) : ?>
     <div class="cpp-grid-view-footer">
-        <a href="<?php echo esc_url($atts['more_link']); ?>" class="cpp-view-more-btn"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></a>
+        <button class="cpp-view-more-btn" data-page="0"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></button>
     </div>
     <?php endif; ?>
-</div>
+    </div>
