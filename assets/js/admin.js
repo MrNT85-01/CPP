@@ -1,13 +1,15 @@
 jQuery(document).ready(function($) {
 
-    // --- ۱. آکاردئون ---
+    // آکاردئون
     $('.cpp-accordion-header').on('click', function() {
         $(this).toggleClass('active').next('.cpp-accordion-content').slideToggle(300);
     });
-    $('.cpp-accordion-content').hide(); 
-    $('.cpp-accordion-header').removeClass('active'); 
+    if ($('.cpp-accordion-content').length) {
+        $('.cpp-accordion-content').hide(); 
+        $('.cpp-accordion-header').removeClass('active'); 
+    }
 
-    // --- ۲. مدیریت آپلود عکس ---
+    // مدیریت آپلود عکس
     var mediaUploader;
     $(document).on('click', '.cpp-upload-btn', function(e) {
         e.preventDefault();
@@ -24,7 +26,7 @@ jQuery(document).ready(function($) {
         mediaUploader.open();
     });
 
-    // --- ۳. ویرایش سریع با دبل کلیک ---
+    // ویرایش سریع با دبل کلیک
     $(document).on('dblclick', '.cpp-quick-edit, .cpp-quick-edit-select', function() {
         var cell = $(this);
         if (cell.hasClass('editing')) return;
@@ -82,7 +84,7 @@ jQuery(document).ready(function($) {
         });
     }
 
-    // --- ۴. منطق پاپ‌آپ ویرایش ---
+    // منطق پاپ‌آپ ویرایش
     $(document).on('click', '.cpp-edit-button', function() {
         var productId = $(this).data('product-id');
         openEditModal({ action: 'cpp_fetch_product_edit_form', id: productId });
@@ -106,10 +108,8 @@ jQuery(document).ready(function($) {
                         window.cpp_init_media_uploader();
                     }
                 } else {
-                    // --- شروع تغییر: نمایش پیام خطای دقیق از سرور ---
                     var errorMessage = response.data ? response.data : 'خطای نامشخص.';
                     $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطا در بارگذاری فرم: ' + errorMessage + '</p>');
-                    // --- پایان تغییر ---
                 }
             })
             .fail(function() {
@@ -122,7 +122,7 @@ jQuery(document).ready(function($) {
         $(this).closest('.cpp-modal-overlay').hide();
     });
 
-    // --- ۵. نمایش نمودار ---
+    // نمایش نمودار
     var chartInstance = null;
     $(document).on('click', '.cpp-show-chart', function(e) {
         e.preventDefault();
@@ -149,7 +149,7 @@ jQuery(document).ready(function($) {
         chartInstance = new Chart(ctx, { type: 'line', data: { labels: chartData.labels, datasets: datasets }, options: { responsive: true, scales: { y: { beginAtZero: false, title: { display: true, text: 'قیمت' }}, x: { title: { display: true, text: 'تاریخ' }}} } });
     }
 
-    // --- ۶. مدیریت ذخیره فرم‌های پاپ آپ ---
+    // مدیریت ذخیره فرم‌های پاپ آپ
     $(document).on('submit', '#cpp-edit-product-form', function(e) {
         e.preventDefault();
         submitEditForm($(this), { action: 'cpp_handle_edit_product_ajax' });
@@ -186,4 +186,12 @@ jQuery(document).ready(function($) {
             }
         });
     }
+
+    // منطق بارگذاری قالب ایمیل در صفحه تنظیمات
+    $('#cpp-load-email-template').on('click', function() {
+        if (confirm('آیا مطمئنید؟ محتوای فعلی فیلد قالب ایمیل با قالب پیش‌فرض جایگزین خواهد شد.')) {
+            var templateHtml = $('#cpp-email-template-html').html();
+            $('#cpp_email_body_template').val(templateHtml.trim());
+        }
+    });
 });
