@@ -69,7 +69,7 @@ jQuery(document).ready(function($) {
         frontChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartData.labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false } });
     }
 
-    // --- ۴. اصلاح منطق بستن پاپ‌آپ‌ها ---
+    // --- ۴. منطق بستن پاپ‌آپ‌ها ---
     $(document).on('click', '.cpp-modal-close', function() {
         $(this).closest('.cpp-modal-overlay').hide();
     });
@@ -79,29 +79,33 @@ jQuery(document).ready(function($) {
         }
     });
     
-    // --- ۵. فیلتر برای شورت‌کد [cpp_products_grid_view] ---
+    // --- ۵. فیلتر دسته‌بندی‌ها برای شورت‌کدهای گرید ---
     $('.cpp-grid-view-filters .filter-btn').on('click', function(e){
         e.preventDefault();
         var $this = $(this);
         var catId = $this.data('cat-id');
-        $('.cpp-grid-view-filters .filter-btn').removeClass('active');
+        // --- شروع تغییر: محدود کردن انتخاب‌گرها به والد فعلی ---
+        var wrapper = $this.closest('.cpp-grid-view-wrapper');
+        wrapper.find('.cpp-grid-view-filters .filter-btn').removeClass('active');
         $this.addClass('active');
         if (catId === 'all') { 
-            $('.cpp-grid-view-table .product-row').show(); 
+            wrapper.find('.cpp-grid-view-table .product-row').show(); 
         } else { 
-            $('.cpp-grid-view-table .product-row').hide(); 
-            $('.cpp-grid-view-table .product-row[data-cat-id="' + catId + '"]').show(); 
+            wrapper.find('.cpp-grid-view-table .product-row').hide(); 
+            wrapper.find('.cpp-grid-view-table .product-row[data-cat-id="' + catId + '"]').show(); 
         }
-        $('.cpp-grid-view-footer').toggle(catId === 'all');
+        wrapper.find('.cpp-grid-view-footer').toggle(catId === 'all');
+        // --- پایان تغییر ---
     });
 
-    // --- ۶. منطق بارگذاری بیشتر محصولات ---
+    // --- ۶. منطق بارگذاری بیشتر محصولات (مشاهده بیشتر) ---
     $(document).on('click', '.cpp-view-more-btn', function() {
         var button = $(this);
-        var page = button.data('page') + 1;
-        // --- شروع تغییر: خواندن وضعیت نمایش تاریخ از دکمه ---
-        var show_date = button.data('show-date');
+        // --- شروع تغییر: پیدا کردن والد منحصر به فرد ---
+        var wrapper = button.closest('.cpp-grid-view-wrapper');
         // --- پایان تغییر ---
+        var page = button.data('page') + 1;
+        var show_date = button.data('show-date');
         var original_text = cpp_front_vars.i18n.view_more;
 
         button.prop('disabled', true).text(cpp_front_vars.i18n.loading);
@@ -110,12 +114,12 @@ jQuery(document).ready(function($) {
             action: 'cpp_load_more_products',
             nonce: cpp_front_vars.nonce,
             page: page,
-            // --- شروع تغییر: ارسال وضعیت به سرور ---
             show_date: show_date
-            // --- پایان تغییر ---
         }, function(response) {
             if (response.success) {
-                $('.cpp-grid-view-table tbody').append(response.data.html);
+                // --- شروع تغییر: افزودن محتوا فقط به جدول داخل والد منحصر به فرد ---
+                wrapper.find('.cpp-grid-view-table tbody').append(response.data.html);
+                // --- پایان تغییر ---
                 button.data('page', page);
                 button.prop('disabled', false).text(original_text);
             } else {
