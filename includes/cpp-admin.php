@@ -1,27 +1,35 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-// --- ۱. ثبت دارایی‌های ادمین (Admin Assets) ---
+/**
+ * مدیریت بخش پیشخوان وردپرس افزونه
+ * شامل ثبت منوها، اسکریپت‌ها، استایل‌ها و مدیریت ایجکس
+ */
+
+// ۱. ثبت و بارگذاری اسکریپت‌ها و استایل‌های بخش مدیریت
 add_action('admin_enqueue_scripts', 'cpp_admin_assets');
 function cpp_admin_assets($hook) {
+    // بررسی اینکه آیا در یکی از صفحات افزونه هستیم یا خیر
     $is_cpp_page = strpos($hook, 'custom-prices') !== false;
 
     // اگر صفحه فعلی، یکی از صفحات افزونه ما یا صفحات مرتبط دیگر نیست، اسکریپت‌ها را بارگذاری نکن
     if (!$is_cpp_page && $hook !== 'post.php' && $hook !== 'post-new.php' && !isset($_GET['elementor-preview'])) return; 
 
-    // کتابخانه‌های مورد نیاز
+    // کتابخانه‌های عمومی مورد نیاز
     wp_enqueue_media(); 
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', [], null, true);
+    
+    // اسکریپت اصلی مدیریت
     wp_enqueue_script('cpp-admin-js', CPP_ASSETS_URL . 'js/admin.js', ['jquery', 'wp-i18n', 'chart-js'], CPP_VERSION, true);
     
-    // --- شروع تغییر: افزودن اسکریپت و استایل انتخاب‌گر رنگ فقط برای صفحه تنظیمات ---
+    // افزودن اسکریپت و استایل انتخاب‌گر رنگ فقط برای صفحه تنظیمات
     // هوک صحیح برای صفحه تنظیمات ما "price-management_page_custom-prices-settings" است
     if ($hook === 'price-management_page_custom-prices-settings') {
         wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('cpp-admin-color-picker', CPP_ASSETS_URL . 'js/admin-color-picker.js', ['wp-color-picker'], false, true);
+        wp_enqueue_script('cpp-color-picker-init', CPP_ASSETS_URL . 'js/admin-color-picker.js', ['wp-color-picker', 'jquery'], CPP_VERSION, true);
     }
-    // --- پایان تغییر ---
 
+    // آماده‌سازی متغیرها برای ارسال به جاوا اسکریپت
     $order_statuses = [
         'new_order'     => __('سفارش جدید', 'cpp-full'),
         'negotiating'   => __('در حال مذاکره', 'cpp-full'),
@@ -29,7 +37,6 @@ function cpp_admin_assets($hook) {
         'completed'     => __('خرید انجام شد', 'cpp-full'),
     ];
 
-    // ارسال متغیرها از PHP به جاوا اسکریپت
     wp_localize_script('cpp-admin-js', 'cpp_admin_vars', [
         'ajax_url'      => admin_url('admin-ajax.php'),
         'nonce'         => wp_create_nonce('cpp_admin_nonce'),
@@ -37,9 +44,10 @@ function cpp_admin_assets($hook) {
         'order_statuses' => $order_statuses,
     ]);
     
+    // استایل اصلی بخش مدیریت
     wp_enqueue_style('cpp-admin-css', CPP_ASSETS_URL . 'css/admin.css', [], CPP_VERSION);
     
-    // استایل‌های درون‌خطی برای مودال
+    // استایل‌های درون‌خطی برای مودال (پاپ‌آپ)
     $custom_css = "
         .cpp-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; display: none; overflow-y: auto; }
         .cpp-modal-container { background: #fff; margin: 5% auto; padding: 20px; border-radius: 5px; width: 90%; max-width: 800px; position: relative; }
@@ -71,7 +79,7 @@ function cpp_admin_assets($hook) {
     ', 'after');
 }
 
-// --- ۲. ثبت منوهای افزونه در پیشخوان وردپرس ---
+// ۲. ثبت منوهای افزونه در پیشخوان وردپرس
 add_action('admin_menu', 'cpp_admin_menu');
 function cpp_admin_menu() {
     add_menu_page( __('مدیریت قیمت‌ها و سفارشات', 'cpp-full'), __('مدیریت قیمت', 'cpp-full'), 'manage_options', 'custom-prices-products', 'cpp_products_page', 'dashicons-tag', 30 );
@@ -79,11 +87,11 @@ function cpp_admin_menu() {
     add_submenu_page('custom-prices-products', __('سفارشات', 'cpp-full'), __('سفارشات مشتری', 'cpp-full'), 'manage_options', 'custom-prices-orders', 'cpp_orders_page');
     add_submenu_page('custom-prices-products', __('شورت‌کدها', 'cpp-full'), __('شورت‌کدها', 'cpp-full'), 'manage_options', 'custom-prices-shortcodes', 'cpp_shortcodes_page');
     add_submenu_page('custom-prices-products', __('تنظیمات', 'cpp-full'), __('تنظیمات', 'cpp-full'), 'manage_options', 'custom-prices-settings', 'cpp_settings_page');
-    // صفحه مخفی برای ویرایش محصول
+    // صفحه مخفی برای ویرایش محصول که در منو نمایش داده نمی‌شود
     add_submenu_page( null, __('ویرایش محصول', 'cpp-full'), __('ویرایش محصول', 'cpp-full'), 'manage_options', 'custom-prices-product-edit', 'cpp_product_edit_page' );
 }
 
-// --- ۳. توابع برای نمایش محتوای هر صفحه از منو ---
+// ۳. توابع Callback برای نمایش محتوای هر صفحه از منو
 function cpp_products_page() { 
     include CPP_TEMPLATES_DIR . 'products.php'; 
     echo '<div id="cpp-edit-modal" class="cpp-modal-overlay" style="display: none;"><div class="cpp-modal-container"><span class="cpp-close-modal">×</span><div class="cpp-edit-modal-content"></div></div></div>';
@@ -97,7 +105,7 @@ function cpp_settings_page() { include CPP_TEMPLATES_DIR . 'settings.php'; }
 function cpp_shortcodes_page() { include CPP_TEMPLATES_DIR . 'shortcodes.php'; }
 function cpp_product_edit_page() { include CPP_TEMPLATES_DIR . 'product-edit.php'; }
 
-// --- ۴. مدیریت فرم‌های POST (افزودن و حذف) ---
+// ۴. مدیریت فرم‌های POST (افزودن و حذف)
 add_action('admin_init', 'cpp_handle_admin_actions');
 function cpp_handle_admin_actions() {
     global $wpdb;
@@ -145,7 +153,7 @@ function cpp_handle_admin_actions() {
     }
 }
 
-// --- ۵. توابع AJAX برای محصولات ---
+// ۵. توابع AJAX برای محصولات
 add_action('wp_ajax_cpp_fetch_product_edit_form', 'cpp_fetch_product_edit_form');
 function cpp_fetch_product_edit_form() {
     if (!isset($_GET['security']) || !wp_verify_nonce($_GET['security'], 'cpp_admin_nonce')) {
@@ -187,7 +195,7 @@ function cpp_handle_edit_product_ajax() {
     }
 }
 
-// --- ۶. توابع AJAX برای دسته‌بندی‌ها ---
+// ۶. توابع AJAX برای دسته‌بندی‌ها
 add_action('wp_ajax_cpp_fetch_category_edit_form', 'cpp_fetch_category_edit_form');
 function cpp_fetch_category_edit_form() {
     if (!isset($_GET['security']) || !wp_verify_nonce($_GET['security'], 'cpp_admin_nonce')) {
@@ -220,7 +228,7 @@ function cpp_handle_edit_category_ajax() {
     else { wp_send_json_error(__('خطا در به‌روزرسانی دسته‌بندی.', 'cpp-full')); }
 }
 
-// --- ۷. تابع AJAX برای ویرایش سریع (Quick Edit) ---
+// ۷. تابع AJAX برای ویرایش سریع (Quick Edit)
 add_action('wp_ajax_cpp_quick_update', 'cpp_quick_update');
 function cpp_quick_update() {
     check_ajax_referer('cpp_admin_nonce', 'security'); 
@@ -249,10 +257,10 @@ function cpp_quick_update() {
     $data_to_update = [$field => $value];
     $response_data = ['message' => 'با موفقیت به‌روزرسانی شد.'];
     
-    if ($table_type === 'products' && $field === 'price') {
-        $old_price = $wpdb->get_var($wpdb->prepare("SELECT price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $id));
-        if ($old_price !== $value) {
-            CPP_Core::save_price_history($id, $value); 
+    if ($table_type === 'products' && ($field === 'price' || $field === 'min_price' || $field === 'max_price')) {
+        $old_data = $wpdb->get_row($wpdb->prepare("SELECT price, min_price, max_price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $id));
+        if ($old_data->$field !== $value) {
+            CPP_Core::save_price_history($id, $data_to_update); 
             $response_data['new_time'] = date_i18n('Y/m/d H:i:s', current_time('timestamp'));
         }
     }
@@ -264,7 +272,7 @@ function cpp_quick_update() {
     wp_send_json_success($response_data);
 }
 
-// --- ۸. هوک برای سازگاری با المنتور ---
+// ۸. هوک برای سازگاری با المنتور
 add_action('elementor/frontend/after_register_styles', 'cpp_enqueue_styles_elementor');
 function cpp_enqueue_styles_elementor() {
     if (!wp_style_is('cpp-front-css', 'enqueued')) {
