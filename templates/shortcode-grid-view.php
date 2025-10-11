@@ -4,12 +4,10 @@ if (!defined('ABSPATH')) exit;
 $disable_base_price = get_option('cpp_disable_base_price', 0);
 $cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
 $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
-// --- شروع تغییر: خواندن تنظیمات نمایش تصویر ---
-$show_image = get_option('cpp_grid_show_image', 0);
-// --- پایان تغییر ---
+$show_image = get_option('cpp_grid_with_date_show_image', 1);
 ?>
 
-<div class="cpp-grid-view-wrapper" id="cpp-grid-with-date">
+<div class="cpp-grid-view-wrapper with-date-shortcode">
     <?php if (!empty($categories)) : ?>
         <div class="cpp-grid-view-filters">
             <a href="#" class="filter-btn active" data-cat-id="all"><?php _e('همه دسته‌ها', 'cpp-full'); ?></a>
@@ -22,13 +20,14 @@ $show_image = get_option('cpp_grid_show_image', 0);
     <table class="cpp-grid-view-table">
         <thead>
             <tr>
-                <?php if ($show_image) : ?><th><?php _e('تصویر', 'cpp-full'); ?></th><?php endif; ?>
                 <th><?php _e('محصول', 'cpp-full'); ?></th>
                 <th><?php _e('نوع', 'cpp-full'); ?></th>
                 <th><?php _e('واحد', 'cpp-full'); ?></th>
                 <th><?php _e('محل بارگیری', 'cpp-full'); ?></th>
                 <th><?php _e('آخرین بروزرسانی', 'cpp-full'); ?></th>
-                <?php if (!$disable_base_price) : ?><th><?php _e('قیمت پایه', 'cpp-full'); ?></th><?php endif; ?>
+                <?php if (!$disable_base_price) : ?>
+                    <th><?php _e('قیمت پایه', 'cpp-full'); ?></th>
+                <?php endif; ?>
                 <th><?php _e('بازه قیمت', 'cpp-full'); ?></th>
                 <th><?php _e('عملیات', 'cpp-full'); ?></th>
             </tr>
@@ -36,30 +35,47 @@ $show_image = get_option('cpp_grid_show_image', 0);
         <tbody>
             <?php if (!empty($products)) : foreach ($products as $product) : ?>
                 <tr class="product-row" data-cat-id="<?php echo esc_attr($product->cat_id); ?>">
-                    <?php if ($show_image) : ?>
-                        <td><img src="<?php echo esc_url($product->image_url) ? esc_url($product->image_url) : CPP_ASSETS_URL . 'images/default-product.png'; ?>" style="width: 50px; height: 50px; object-fit: cover;"></td>
-                    <?php endif; ?>
-                    <td class="col-product-name"><?php echo esc_html($product->name); ?></td>
+                    <td class="col-product-name">
+                        <?php if ($show_image) : ?>
+                            <img src="<?php echo esc_url($product->image_url) ? esc_url($product->image_url) : CPP_ASSETS_URL . 'images/default-product.png'; ?>">
+                        <?php endif; ?>
+                        <span><?php echo esc_html($product->name); ?></span>
+                    </td>
                     <td><?php echo esc_html($product->product_type); ?></td>
                     <td><?php echo esc_html($product->unit); ?></td>
                     <td><?php echo esc_html($product->load_location); ?></td>
                     <td><?php echo esc_html(date_i18n('Y/m/d H:i', strtotime($product->last_updated_at))); ?></td>
+                    
                     <?php if (!$disable_base_price) : ?>
-                    <td class="col-price"><?php echo esc_html(number_format((float)str_replace(',', '', $product->price))); ?></td>
+                    <td class="col-price">
+                        <?php echo esc_html(number_format_i18n((float)str_replace(',', '', $product->price))); ?>
+                    </td>
                     <?php endif; ?>
+
                      <td class="col-price-range">
                         <?php if (!empty($product->min_price) && !empty($product->max_price)) : ?>
-                            <?php echo esc_html($product->min_price); ?> - <?php echo esc_html($product->max_price); ?>
+                            <?php echo esc_html(number_format_i18n(str_replace(',', '', $product->min_price))); ?> - <?php echo esc_html(number_format_i18n(str_replace(',', '', $product->max_price))); ?>
                         <?php else: ?>
                             <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
                         <?php endif; ?>
                     </td>
+
                     <td class="col-actions">
                         <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>"><img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>"></button>
                         <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>"><img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>"></button>
                     </td>
                 </tr>
-            <?php endforeach; endif; ?>
+            <?php endforeach; else: ?>
+                <tr>
+                    <td colspan="<?php echo $disable_base_price ? '7' : '8'; ?>"><?php _e('محصولی برای نمایش یافت نشد.', 'cpp-full'); ?></td>
+                </tr>
+            <?php endif; ?>
         </tbody>
     </table>
+
+    <?php if (count($products) < $total_products) : ?>
+    <div class="cpp-grid-view-footer">
+        <button class="cpp-view-more-btn" data-page="0" data-shortcode-type="with_date"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></button>
     </div>
+    <?php endif; ?>
+</div>
