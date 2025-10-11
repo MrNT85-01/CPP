@@ -2,14 +2,14 @@
 /**
  * Plugin Name: Custom Prices & Orders
  * Description: افزونه مستقل برای مدیریت بازه قیمت‌ها، دسته‌بندی محصولات و ثبت سفارش‌های درخواست شده (بدون ووکامرس). شامل شورت‌کدهای نمایش (کامل، براساس دسته، یا براساس آی‌دی‌ها)، پاپ‌آپ سفارش، صفحه تنظیمات و خروجی اکسل/CSV سفارشات.
- * Version: 2.8
+ * Version: 2.9.1
  * Author: Mr.NT
  */
 
 if (!defined('ABSPATH')) exit;
 
 global $wpdb;
-define('CPP_VERSION', '2.8.0');
+define('CPP_VERSION', '2.9.1');
 define('CPP_PATH', plugin_dir_path(__FILE__));
 define('CPP_URL', plugin_dir_url(__FILE__));
 define('CPP_TEMPLATES_DIR', CPP_PATH . 'templates/');
@@ -20,37 +20,46 @@ define('CPP_DB_CATEGORIES', $wpdb->prefix . 'cpp_categories');
 define('CPP_DB_PRICE_HISTORY', $wpdb->prefix . 'cpp_price_history');
 define('CPP_PLUGIN_SLUG','custom-prices');
 
+// بارگذاری فایل‌های ضروری افزونه
 require_once(CPP_PATH . 'includes/cpp-core.php');
 require_once(CPP_PATH . 'includes/cpp-admin.php');
 require_once(CPP_PATH . 'includes/cpp-settings.php');
 if (file_exists(CPP_PATH . 'includes/cpp-email.php')) require_once(CPP_PATH . 'includes/cpp-email.php');
 if (file_exists(CPP_PATH . 'includes/cpp-sms.php')) require_once(CPP_PATH . 'includes/cpp-sms.php');
 
-// تابع فعال‌سازی افزونه: مقادیر پیش‌فرض را برای تنظیمات جدید ست می‌کند
+// تابع فعال‌سازی افزونه: ایجاد جداول و ثبت مقادیر پیش‌فرض برای تنظیمات
 register_activation_hook(__FILE__, 'cpp_activate');
 function cpp_activate() {
     CPP_Core::create_db_tables();
+    // تنظیمات پیش‌فرض برای ایمیل
     if (get_option('cpp_email_subject_template') === false) {
         update_option('cpp_email_subject_template', 'سفارش جدید: {product_name}');
         update_option('cpp_email_body_template', '<p style="direction:rtl; text-align:right;">سفارش جدیدی از طریق وب‌سایت ثبت شده است:<br><br><strong>محصول:</strong> {product_name}<br><strong>نام مشتری:</strong> {customer_name}<br><strong>شماره تماس:</strong> {phone}<br><strong>تعداد/مقدار:</strong> {qty}<br><strong>توضیحات مشتری:</strong> {note}<br></p>');
     }
+    // تنظیمات پیش‌فرض برای نمایش محصولات
     if (get_option('cpp_products_per_page') === false) {
         update_option('cpp_products_per_page', 5);
     }
+    // تنظیمات پیش‌فرض برای رنگ دکمه‌ها و نمایش تصویر در شورت‌کدها
     if (get_option('cpp_grid_with_date_button_color') === false) {
         update_option('cpp_grid_with_date_button_color', '#ffc107');
     }
     if (get_option('cpp_grid_no_date_button_color') === false) {
         update_option('cpp_grid_no_date_button_color', '#0073aa');
     }
+    if (get_option('cpp_grid_with_date_show_image') === false) {
+        update_option('cpp_grid_with_date_show_image', 1);
+    }
+    if (get_option('cpp_grid_no_date_show_image') === false) {
+        update_option('cpp_grid_no_date_show_image', 1);
+    }
 }
 
-// شورت‌کد [cpp_products_list]
+// شورت‌کد [cpp_products_list] برای نمایش جدولی ساده
 add_shortcode('cpp_products_list', 'cpp_products_list_shortcode');
 function cpp_products_list_shortcode($atts) {
     $atts = shortcode_atts( array( 'cat_id' => '', 'ids' => '', 'status' => '1' ), $atts, 'cpp_products_list' );
     global $wpdb;
-
     $where_clauses = [];
     $query_params = [];
 
@@ -75,19 +84,18 @@ function cpp_products_list_shortcode($atts) {
         }
     }
 
-    $where_sql = 'WHERE 1=1';
-    if (!empty($where_clauses)) { $where_sql .= ' AND ' . implode(' AND ', $where_clauses); }
-
+    $where_sql = !empty($where_clauses) ? ' WHERE ' . implode(' AND ', $where_clauses) : '';
     $query = "SELECT p.*, c.name as category_name FROM " . CPP_DB_PRODUCTS . " p LEFT JOIN " . CPP_DB_CATEGORIES . " c ON p.cat_id = c.id {$where_sql} ORDER BY p.id DESC";
     $products = $wpdb->get_results($wpdb->prepare($query, $query_params));
 
     if (!$products) { return '<p class="cpp-no-products">' . __('محصولی برای نمایش یافت نشد.', 'cpp-full') . '</p>'; }
+    
     ob_start();
     include CPP_TEMPLATES_DIR . 'shortcode-list.php';
     return ob_get_clean();
 }
 
-// شورت‌کد [cpp_products_grid_view]
+// شورت‌کد [cpp_products_grid_view] با ستون تاریخ
 add_shortcode('cpp_products_grid_view', 'cpp_products_grid_view_shortcode');
 function cpp_products_grid_view_shortcode($atts) {
     global $wpdb;
@@ -98,6 +106,7 @@ function cpp_products_grid_view_shortcode($atts) {
         $products_per_page
     ));
     $total_products = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
+
     if (!$products) { return '<p class="cpp-no-products">' . __('محصولی برای نمایش یافت نشد.', 'cpp-full') . '</p>'; }
     
     ob_start();
@@ -105,7 +114,7 @@ function cpp_products_grid_view_shortcode($atts) {
     return ob_get_clean();
 }
 
-// شورت‌کد [cpp_products_grid_view_no_date]
+// شورت‌کد [cpp_products_grid_view_no_date] بدون ستون تاریخ
 add_shortcode('cpp_products_grid_view_no_date', 'cpp_products_grid_view_no_date_shortcode');
 function cpp_products_grid_view_no_date_shortcode($atts) {
     global $wpdb;
@@ -117,6 +126,7 @@ function cpp_products_grid_view_no_date_shortcode($atts) {
     ));
     $total_products = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
     $last_updated_time = $wpdb->get_var("SELECT MAX(last_updated_at) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
+
     if (!$products) { return '<p class="cpp-no-products">' . __('محصولی برای نمایش یافت نشد.', 'cpp-full') . '</p>'; }
     
     ob_start();
@@ -147,11 +157,9 @@ function cpp_front_assets() {
 // افزودن مودال‌ها و استایل‌های داینامیک به فوتر سایت
 add_action('wp_footer', 'cpp_add_modals_to_footer');
 function cpp_add_modals_to_footer() {
-    // افزودن قالب مودال‌ها
     $modals_template = CPP_TEMPLATES_DIR . 'modals-frontend.php';
     if (file_exists($modals_template)) { include $modals_template; }
 
-    // خواندن رنگ‌ها از تنظیمات و تزریق استایل
     $color_with_date = get_option('cpp_grid_with_date_button_color', '#ffc107');
     $color_no_date = get_option('cpp_grid_no_date_button_color', '#0073aa');
 
@@ -168,7 +176,7 @@ function cpp_add_modals_to_footer() {
     echo '<style type="text/css">' . $custom_css . '</style>';
 }
 
-// تابع ایجکس برای بارگذاری محصولات بیشتر
+// تابع ایجکس برای بارگذاری محصولات بیشتر ("مشاهده بیشتر")
 add_action('wp_ajax_cpp_load_more_products', 'cpp_load_more_products');
 add_action('wp_ajax_nopriv_cpp_load_more_products', 'cpp_load_more_products');
 function cpp_load_more_products() {
@@ -178,8 +186,15 @@ function cpp_load_more_products() {
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $products_per_page = get_option('cpp_products_per_page', 5);
     $offset = $page * $products_per_page;
-    $show_date_column = isset($_POST['show_date']) && $_POST['show_date'] === 'true';
-    $show_image = get_option('cpp_grid_show_image', 0);
+    $shortcode_type = isset($_POST['shortcode_type']) ? sanitize_key($_POST['shortcode_type']) : 'with_date';
+
+    if ($shortcode_type === 'with_date') {
+        $show_image = get_option('cpp_grid_with_date_show_image', 1);
+        $show_date_column = true;
+    } else {
+        $show_image = get_option('cpp_grid_no_date_show_image', 1);
+        $show_date_column = false;
+    }
 
     $products = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1 ORDER BY id DESC LIMIT %d OFFSET %d",
@@ -195,10 +210,12 @@ function cpp_load_more_products() {
             $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
             ?>
             <tr class="product-row" data-cat-id="<?php echo esc_attr($product->cat_id); ?>">
-                <?php if ($show_image) : ?>
-                    <td><img src="<?php echo esc_url($product->image_url) ? esc_url($product->image_url) : CPP_ASSETS_URL . 'images/default-product.png'; ?>" style="width: 50px; height: 50px; object-fit: cover;"></td>
-                <?php endif; ?>
-                <td class="col-product-name"><?php echo esc_html($product->name); ?></td>
+                <td class="col-product-name">
+                    <?php if ($show_image) : ?>
+                        <img src="<?php echo esc_url($product->image_url) ? esc_url($product->image_url) : CPP_ASSETS_URL . 'images/default-product.png'; ?>">
+                    <?php endif; ?>
+                    <span><?php echo esc_html($product->name); ?></span>
+                </td>
                 <td><?php echo esc_html($product->product_type); ?></td>
                 <td><?php echo esc_html($product->unit); ?></td>
                 <td><?php echo esc_html($product->load_location); ?></td>
@@ -211,7 +228,7 @@ function cpp_load_more_products() {
                 <td class="col-price">
                     <?php 
                         if (!empty($product->price) && is_numeric(str_replace(',', '', $product->price))) {
-                            echo esc_html(number_format((float)str_replace(',', '', $product->price)));
+                            echo esc_html(number_format_i18n((float)str_replace(',', '', $product->price)));
                         } else {
                             echo esc_html($product->price);
                         }
@@ -221,19 +238,15 @@ function cpp_load_more_products() {
 
                  <td class="col-price-range">
                     <?php if (!empty($product->min_price) && !empty($product->max_price)) : ?>
-                        <?php echo esc_html($product->min_price); ?> - <?php echo esc_html($product->max_price); ?>
+                        <?php echo esc_html(number_format_i18n(str_replace(',', '', $product->min_price))); ?> - <?php echo esc_html(number_format_i18n(str_replace(',', '', $product->max_price))); ?>
                     <?php else: ?>
                         <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
                     <?php endif; ?>
                 </td>
 
                 <td class="col-actions">
-                    <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>">
-                        <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>">
-                    </button>
-                    <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>">
-                        <img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>">
-                    </button>
+                    <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>"><img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>"></button>
+                    <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>"><img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>"></button>
                 </td>
             </tr>
             <?php
