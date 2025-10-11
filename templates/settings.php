@@ -52,6 +52,13 @@ if (!defined('ABSPATH')) exit;
                     <p class="description"><?php _e('این تعداد محصول در شورت‌کد گرید در ابتدا نمایش داده شده و با هر بار کلیک روی "مشاهده بیشتر" همین تعداد اضافه می‌شود.', 'cpp-full'); ?></p>
                 </td>
             </tr>
+            <tr valign="top">
+                <th scope="row"><?php _e('رنگ دکمه فعال فیلتر', 'cpp-full'); ?></th>
+                <td>
+                    <input type="text" name="cpp_grid_button_color" value="<?php echo esc_attr(get_option('cpp_grid_button_color', '#ffc107')); ?>" class="cpp-color-picker" />
+                    <p class="description"><?php _e('رنگ دکمه دسته‌بندی فعال در شورت‌کدهای گرید را انتخاب کنید.', 'cpp-full'); ?></p>
+                </td>
+            </tr>
             </table>
         
         <h2><?php _e('تنظیمات پیامک (SMS)','cpp-full'); ?></h2>
