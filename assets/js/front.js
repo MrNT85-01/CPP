@@ -92,15 +92,16 @@ jQuery(document).ready(function($) {
             $('.cpp-grid-view-table .product-row').hide(); 
             $('.cpp-grid-view-table .product-row[data-cat-id="' + catId + '"]').show(); 
         }
-        // --- شروع تغییر: مخفی کردن دکمه "مشاهده بیشتر" هنگام فیلتر ---
         $('.cpp-grid-view-footer').toggle(catId === 'all');
-        // --- پایان تغییر ---
     });
 
-    // --- شروع تغییر: افزودن منطق بارگذاری بیشتر محصولات ---
+    // --- ۶. منطق بارگذاری بیشتر محصولات ---
     $(document).on('click', '.cpp-view-more-btn', function() {
         var button = $(this);
         var page = button.data('page') + 1;
+        // --- شروع تغییر: خواندن وضعیت نمایش تاریخ از دکمه ---
+        var show_date = button.data('show-date');
+        // --- پایان تغییر ---
         var original_text = cpp_front_vars.i18n.view_more;
 
         button.prop('disabled', true).text(cpp_front_vars.i18n.loading);
@@ -108,7 +109,10 @@ jQuery(document).ready(function($) {
         $.post(cpp_front_vars.ajax_url, {
             action: 'cpp_load_more_products',
             nonce: cpp_front_vars.nonce,
-            page: page
+            page: page,
+            // --- شروع تغییر: ارسال وضعیت به سرور ---
+            show_date: show_date
+            // --- پایان تغییر ---
         }, function(response) {
             if (response.success) {
                 $('.cpp-grid-view-table tbody').append(response.data.html);
@@ -122,5 +126,4 @@ jQuery(document).ready(function($) {
             button.prop('disabled', false).text(original_text);
         });
     });
-    // --- پایان تغییر ---
 });
