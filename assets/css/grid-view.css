@@ -16,7 +16,8 @@
     gap: 10px;
     margin-bottom: 25px;
 }
-.cpp-grid-view-filters .filter-btn {
+.cpp-grid-view-filters .filter-btn,
+.cpp-grid-view-filters .last-update-display {
     text-decoration: none;
     padding: 10px 25px;
     border-radius: 20px;
@@ -27,14 +28,20 @@
     font-size: 14px;
     transition: all 0.2s ease-in-out;
 }
+.cpp-grid-view-filters .last-update-display {
+    cursor: default;
+    background-color: #f0f0f0;
+}
+
 .cpp-grid-view-filters .filter-btn:hover {
     background-color: #f0f0f0;
     border-color: #ccc;
 }
+
 .cpp-grid-view-filters .filter-btn.active {
-    background-color: #ffc107;
+    background-color: var(--cpp-active-filter-color, #ffc107);
     color: #333;
-    border-color: #ffc107;
+    border-color: var(--cpp-active-filter-color, #ffc107);
     font-weight: bold;
 }
 
@@ -75,9 +82,8 @@
     white-space: nowrap;
 }
 
-/* --- شروع تغییر: سایز آیکون‌ها کوچک شد --- */
 .cpp-grid-view-table .col-actions .cpp-icon-btn img {
-    width: 18px; /* سایز جدید و کوچک‌تر */
+    width: 18px;
     height: 18px;
     opacity: 0.7;
     transition: opacity 0.2s;
@@ -85,7 +91,6 @@
 .cpp-grid-view-table .col-actions .cpp-icon-btn:hover img {
     opacity: 1;
 }
-/* --- پایان تغییر --- */
 
 /* View More Button */
 .cpp-grid-view-footer {
