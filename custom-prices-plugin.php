@@ -2,14 +2,14 @@
 /**
  * Plugin Name: Custom Prices & Orders
  * Description: افزونه مستقل برای مدیریت بازه قیمت‌ها، دسته‌بندی محصولات و ثبت سفارش‌های درخواست شده (بدون ووکامرس). شامل شورت‌کدهای نمایش (کامل، براساس دسته، یا براساس آی‌دی‌ها)، پاپ‌آپ سفارش، صفحه تنظیمات و خروجی اکسل/CSV سفارشات.
- * Version: 2.5
+ * Version: 2.6
  * Author: Mr.NT
  */
 
 if (!defined('ABSPATH')) exit;
 
 global $wpdb;
-define('CPP_VERSION', '2.5.0');
+define('CPP_VERSION', '2.6.0');
 define('CPP_PATH', plugin_dir_path(__FILE__));
 define('CPP_URL', plugin_dir_url(__FILE__));
 define('CPP_TEMPLATES_DIR', CPP_PATH . 'templates/');
@@ -35,6 +35,10 @@ function cpp_activate() {
     }
     if (get_option('cpp_products_per_page') === false) {
         update_option('cpp_products_per_page', 5);
+    }
+    // افزودن مقدار پیش‌فرض برای رنگ
+    if (get_option('cpp_grid_button_color') === false) {
+        update_option('cpp_grid_button_color', '#ffc107');
     }
 }
 
@@ -102,7 +106,7 @@ function cpp_products_grid_view_shortcode($atts) {
     return ob_get_clean();
 }
 
-// --- شروع تغییر: افزودن شورت‌کد جدید ---
+// Shortcode [cpp_products_grid_view_no_date]
 add_shortcode('cpp_products_grid_view_no_date', 'cpp_products_grid_view_no_date_shortcode');
 function cpp_products_grid_view_no_date_shortcode($atts) {
     $atts = shortcode_atts([], $atts, 'cpp_products_grid_view_no_date');
@@ -117,7 +121,6 @@ function cpp_products_grid_view_no_date_shortcode($atts) {
     ));
     $total_products = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
     
-    // واکشی جدیدترین زمان بروزرسانی
     $last_updated_time = $wpdb->get_var("SELECT MAX(last_updated_at) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
 
     if (!$products) { return '<p class="cpp-no-products">' . __('محصولی برای نمایش یافت نشد.', 'cpp-full') . '</p>'; }
@@ -126,7 +129,6 @@ function cpp_products_grid_view_no_date_shortcode($atts) {
     include CPP_TEMPLATES_DIR . 'shortcode-grid-view-no-date.php';
     return ob_get_clean();
 }
-// --- پایان تغییر ---
 
 add_action('wp_enqueue_scripts', 'cpp_front_assets');
 function cpp_front_assets() {
@@ -151,6 +153,12 @@ add_action('wp_footer', 'cpp_add_modals_to_footer');
 function cpp_add_modals_to_footer() {
     $modals_template = CPP_TEMPLATES_DIR . 'modals-frontend.php';
     if (file_exists($modals_template)) { include $modals_template; }
+
+    $button_color = get_option('cpp_grid_button_color', '#ffc107');
+    if (!empty($button_color)) {
+        $custom_css = ":root { --cpp-active-filter-color: " . esc_attr($button_color) . "; }";
+        echo '<style type="text/css">' . $custom_css . '</style>';
+    }
 }
 
 add_action('wp_ajax_cpp_load_more_products', 'cpp_load_more_products');
@@ -162,9 +170,7 @@ function cpp_load_more_products() {
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $products_per_page = get_option('cpp_products_per_page', 5);
     $offset = $page * $products_per_page;
-    // --- شروع تغییر: افزودن یک پارامتر برای تشخیص نوع شورت‌کد ---
     $show_date_column = isset($_POST['show_date']) && $_POST['show_date'] === 'true';
-    // --- پایان تغییر ---
 
     $products = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1 ORDER BY id DESC LIMIT %d OFFSET %d",
@@ -188,6 +194,7 @@ function cpp_load_more_products() {
                 <?php if ($show_date_column): ?>
                 <td><?php echo esc_html(date_i18n('Y/m/d H:i', strtotime($product->last_updated_at))); ?></td>
                 <?php endif; ?>
+                
                 <?php if (!$disable_base_price) : ?>
                 <td class="col-price">
                     <?php 
