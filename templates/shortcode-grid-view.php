@@ -1,85 +1,114 @@
-<?php
-if (!defined('ABSPATH')) exit;
+/* Styles for Grid View Shortcode */
+.cpp-grid-view-wrapper {
+    direction: rtl;
+    font-family: sans-serif;
+    background-color: #f9f9f9;
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid #eee;
+}
 
-// واکشی تنظیمات و URL آیکون‌ها
-$disable_base_price = get_option('cpp_disable_base_price', 0);
-$cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
-$chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
-?>
+/* Filter Buttons */
+.cpp-grid-view-filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+.cpp-grid-view-filters .filter-btn,
+.cpp-grid-view-filters .last-update-display {
+    text-decoration: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    background-color: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+.cpp-grid-view-filters .last-update-display {
+    cursor: default;
+    background-color: #f0f0f0;
+}
 
-<div class="cpp-grid-view-wrapper">
-    <?php if (!empty($categories)) : ?>
-        <div class="cpp-grid-view-filters">
-            <a href="#" class="filter-btn active" data-cat-id="all"><?php _e('همه دسته‌ها', 'cpp-full'); ?></a>
-            <?php foreach ($categories as $cat) : ?>
-                <a href="#" class="filter-btn" data-cat-id="<?php echo esc_attr($cat->id); ?>"><?php echo esc_html($cat->name); ?></a>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
+.cpp-grid-view-filters .filter-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
 
-    <table class="cpp-grid-view-table">
-        <thead>
-            <tr>
-                <th><?php _e('محصول', 'cpp-full'); ?></th>
-                <th><?php _e('نوع', 'cpp-full'); ?></th>
-                <th><?php _e('واحد', 'cpp-full'); ?></th>
-                <th><?php _e('محل بارگیری', 'cpp-full'); ?></th>
-                <th><?php _e('آخرین بروزرسانی', 'cpp-full'); ?></th>
-                <?php if (!$disable_base_price) : ?>
-                    <th><?php _e('قیمت پایه', 'cpp-full'); ?></th>
-                <?php endif; ?>
-                <th><?php _e('بازه قیمت', 'cpp-full'); ?></th>
-                <th><?php _e('عملیات', 'cpp-full'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (!empty($products)) : foreach ($products as $product) : ?>
-                <tr class="product-row" data-cat-id="<?php echo esc_attr($product->cat_id); ?>">
-                    <td class="col-product-name"><?php echo esc_html($product->name); ?></td>
-                    <td><?php echo esc_html($product->product_type); ?></td>
-                    <td><?php echo esc_html($product->unit); ?></td>
-                    <td><?php echo esc_html($product->load_location); ?></td>
-                    <td><?php echo esc_html(date_i18n('Y/m/d H:i', strtotime($product->last_updated_at))); ?></td>
-                    <?php if (!$disable_base_price) : ?>
-                    <td class="col-price">
-                        <?php 
-                            if (!empty($product->price) && is_numeric(str_replace(',', '', $product->price))) {
-                                echo esc_html(number_format((float)str_replace(',', '', $product->price)));
-                            } else {
-                                echo esc_html($product->price);
-                            }
-                        ?>
-                    </td>
-                    <?php endif; ?>
+.cpp-grid-view-filters .filter-btn.active {
+    background-color: var(--cpp-active-filter-color, #ffc107);
+    color: #333;
+    border-color: var(--cpp-active-filter-color, #ffc107);
+    font-weight: bold;
+}
 
-                     <td class="col-price-range">
-                        <?php if (!empty($product->min_price) && !empty($product->max_price)) : ?>
-                            <?php echo esc_html($product->min_price); ?> - <?php echo esc_html($product->max_price); ?>
-                        <?php else: ?>
-                            <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
-                        <?php endif; ?>
-                    </td>
+/* Table Styles */
+.cpp-grid-view-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+.cpp-grid-view-table th,
+.cpp-grid-view-table td {
+    padding: 15px 10px;
+    vertical-align: middle;
+}
+.cpp-grid-view-table thead th {
+    color: #888;
+    font-weight: normal;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
+}
+.cpp-grid-view-table tbody tr.product-row {
+    border-bottom: 1px solid #eee;
+}
+.cpp-grid-view-table tbody tr.product-row:last-child {
+    border-bottom: none;
+}
+.cpp-grid-view-table .col-product-name {
+    font-weight: bold;
+    color: #333;
+}
+.cpp-grid-view-table .col-price,
+.cpp-grid-view-table .col-price-range {
+    font-weight: bold;
+    color: #0056b3;
+    font-size: 16px;
+}
+.cpp-grid-view-table .col-actions {
+    white-space: nowrap;
+}
 
-                    <td class="col-actions">
-                        <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>">
-                            <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>">
-                        </button>
-                        <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>">
-                            <img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>">
-                        </button>
-                    </td>
-                </tr>
-            <?php endforeach; else: ?>
-                <tr>
-                    <td colspan="<?php echo $disable_base_price ? '7' : '8'; ?>"><?php _e('محصولی برای نمایش یافت نشد.', 'cpp-full'); ?></td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+.cpp-grid-view-table .col-actions .cpp-icon-btn img {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+.cpp-grid-view-table .col-actions .cpp-icon-btn:hover img {
+    opacity: 1;
+}
 
-    <?php if (count($products) < $total_products) : ?>
-    <div class="cpp-grid-view-footer">
-        <button class="cpp-view-more-btn" data-page="0" data-show-date="true"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></button>
-        </div>
-    <?php endif; ?>
-</div>
+/* View More Button */
+.cpp-grid-view-footer {
+    text-align: center;
+    margin-top: 25px;
+}
+.cpp-view-more-btn {
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    background-color: #fff;
+    color: #555;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+.cpp-view-more-btn:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
