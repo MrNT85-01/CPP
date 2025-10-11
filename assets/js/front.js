@@ -69,29 +69,58 @@ jQuery(document).ready(function($) {
         frontChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartData.labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false } });
     }
 
-    // --- شروع تغییر: اصلاح منطق بستن پاپ‌آپ‌ها ---
-    // بستن با کلیک روی دکمه ضربدر
+    // --- ۴. اصلاح منطق بستن پاپ‌آپ‌ها ---
     $(document).on('click', '.cpp-modal-close', function() {
         $(this).closest('.cpp-modal-overlay').hide();
     });
-
-    // بستن با کلیک روی پس‌زمینه تیره (overlay)
     $(document).on('click', '.cpp-modal-overlay', function(e) {
-        // این شرط چک می‌کند که کلیک مستقیما روی خود پس‌زمینه بوده، نه روی محتوای داخل پاپ‌آپ
         if ($(e.target).is('.cpp-modal-overlay')) {
             $(this).hide();
         }
     });
-    // --- پایان تغییر ---
     
-    // فیلتر برای شورت‌کد [cpp_products_grid_view]
+    // --- ۵. فیلتر برای شورت‌کد [cpp_products_grid_view] ---
     $('.cpp-grid-view-filters .filter-btn').on('click', function(e){
         e.preventDefault();
         var $this = $(this);
         var catId = $this.data('cat-id');
         $('.cpp-grid-view-filters .filter-btn').removeClass('active');
         $this.addClass('active');
-        if (catId === 'all') { $('.cpp-grid-view-table .product-row').show(); } 
-        else { $('.cpp-grid-view-table .product-row').hide(); $('.cpp-grid-view-table .product-row[data-cat-id="' + catId + '"]').show(); }
+        if (catId === 'all') { 
+            $('.cpp-grid-view-table .product-row').show(); 
+        } else { 
+            $('.cpp-grid-view-table .product-row').hide(); 
+            $('.cpp-grid-view-table .product-row[data-cat-id="' + catId + '"]').show(); 
+        }
+        // --- شروع تغییر: مخفی کردن دکمه "مشاهده بیشتر" هنگام فیلتر ---
+        $('.cpp-grid-view-footer').toggle(catId === 'all');
+        // --- پایان تغییر ---
     });
+
+    // --- شروع تغییر: افزودن منطق بارگذاری بیشتر محصولات ---
+    $(document).on('click', '.cpp-view-more-btn', function() {
+        var button = $(this);
+        var page = button.data('page') + 1;
+        var original_text = cpp_front_vars.i18n.view_more;
+
+        button.prop('disabled', true).text(cpp_front_vars.i18n.loading);
+
+        $.post(cpp_front_vars.ajax_url, {
+            action: 'cpp_load_more_products',
+            nonce: cpp_front_vars.nonce,
+            page: page
+        }, function(response) {
+            if (response.success) {
+                $('.cpp-grid-view-table tbody').append(response.data.html);
+                button.data('page', page);
+                button.prop('disabled', false).text(original_text);
+            } else {
+                button.text(cpp_front_vars.i18n.no_more_products).prop('disabled', true);
+            }
+        }).fail(function() {
+            alert('Server error.');
+            button.prop('disabled', false).text(original_text);
+        });
+    });
+    // --- پایان تغییر ---
 });
