@@ -61,3 +61,15 @@
     border: 1px solid #ddd;
     padding: 5px;
 }
+
+/* --- شروع تغییر: استایل‌های صفحه تنظیمات --- */
+.cpp-settings-wrap .nav-tab-wrapper {
+    margin-bottom: 20px;
+}
+.cpp-settings-wrap form {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+}
+/* --- پایان تغییر --- */
