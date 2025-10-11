@@ -43,13 +43,14 @@
                 <tr valign="top">
                     <th scope="row"><?php _e('قالب ایمیل سفارش','cpp-full'); ?></th>
                     <td>
-                        <button type="button" id="cpp-load-email-template" class="button"><?php _e('بارگذاری قالب پیش‌فرض', 'cpp-full'); ?></button>
                         <textarea name="cpp_email_body_template" id="cpp_email_body_template" rows="10" cols="50" class="large-text"><?php echo esc_textarea(get_option('cpp_email_body_template')); ?></textarea>
                         <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
+                        <button type="button" id="cpp-load-email-template" class="button" style="margin-top:10px;"><?php _e('بارگذاری قالب پیش‌فرض زیبا', 'cpp-full'); ?></button>
                     </td>
                 </tr>
             </table>
             
+            <hr>
             <h3><?php _e('تنظیمات پیامک (SMS)','cpp-full'); ?></h3>
             <table class="form-table">
                 <tr valign="top">
@@ -102,7 +103,7 @@
                 <table style="width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px;">
                     <tbody>
                         <tr style="background-color: #f9f9f9;">
-                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">محصول:</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 120px;">محصول:</td>
                             <td style="padding: 10px; border: 1px solid #dddddd;">{product_name}</td>
                         </tr>
                         <tr>
