@@ -1,9 +1,7 @@
 <div class="wrap cpp-settings-wrap">
     <h1><?php echo __('تنظیمات افزونه مدیریت قیمت‌ها','cpp-full'); ?></h1>
 
-    <?php
-    $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'general';
-    ?>
+    <?php $active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'general'; ?>
 
     <h2 class="nav-tab-wrapper">
         <a href="?page=custom-prices-settings&tab=general" class="nav-tab <?php echo $active_tab == 'general' ? 'nav-tab-active' : ''; ?>"><?php _e('عمومی', 'cpp-full'); ?></a>
@@ -19,10 +17,10 @@
         } elseif ($active_tab == 'shortcodes') {
             settings_fields('cpp_shortcode_settings_grp');
             do_settings_sections('cpp_shortcode_settings_page');
-        } else {
+        } else { // Tab Notifications
             settings_fields('cpp_notification_settings_grp');
-            // چون فیلدهای اعلان زیاد هستند، آن‌ها را مستقیما اینجا می‌نویسیم
             ?>
+            <h3><?php _e('تنظیمات ایمیل', 'cpp-full'); ?></h3>
             <table class="form-table">
                 <tr valign="top">
                     <th scope="row"><?php _e('فعال‌سازی ارسال ایمیل','cpp-full'); ?></th>
@@ -45,18 +43,91 @@
                 <tr valign="top">
                     <th scope="row"><?php _e('قالب ایمیل سفارش','cpp-full'); ?></th>
                     <td>
-                        <textarea name="cpp_email_body_template" rows="5" cols="50" class="large-text"><?php echo esc_textarea(get_option('cpp_email_body_template')); ?></textarea>
+                        <button type="button" id="cpp-load-email-template" class="button"><?php _e('بارگذاری قالب پیش‌فرض', 'cpp-full'); ?></button>
+                        <textarea name="cpp_email_body_template" id="cpp_email_body_template" rows="10" cols="50" class="large-text"><?php echo esc_textarea(get_option('cpp_email_body_template')); ?></textarea>
                         <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
                     </td>
                 </tr>
-                 <tr><td colspan="2"><hr></td></tr>
-                 <tr valign="top">
-                    <th scope="row" colspan="2"><h3><?php _e('تنظیمات پیامک (SMS)','cpp-full'); ?></h3></th>
+            </table>
+            
+            <h3><?php _e('تنظیمات پیامک (SMS)','cpp-full'); ?></h3>
+            <table class="form-table">
+                <tr valign="top">
+                    <th scope="row"><?php _e('سرویس‌دهنده پیامک','cpp-full'); ?></th>
+                    <td>
+                        <select name="cpp_sms_service">
+                            <option value="" <?php selected(get_option('cpp_sms_service'), ''); ?>><?php _e('غیرفعال', 'cpp-full'); ?></option>
+                            <option value="melipayamak" <?php selected(get_option('cpp_sms_service'), 'melipayamak'); ?>>MeliPayamak</option>
+                            <option value="kavenegar" <?php selected(get_option('cpp_sms_service'), 'kavenegar'); ?>>Kavenegar</option>
+                            <option value="ippanel" <?php selected(get_option('cpp_sms_service'), 'ippanel'); ?>>IPPanel</option>
+                        </select>
+                    </td>
                 </tr>
-                </table>
+                 <tr valign="top">
+                    <th scope="row"><?php _e('کلید API','cpp-full'); ?></th>
+                    <td><input type="text" name="cpp_sms_api_key" value="<?php echo esc_attr( get_option('cpp_sms_api_key') ); ?>" class="regular-text"/></td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row"><?php _e('شماره فرستنده','cpp-full'); ?></th>
+                    <td><input type="text" name="cpp_sms_sender" value="<?php echo esc_attr( get_option('cpp_sms_sender') ); ?>" class="regular-text"/></td>
+                </tr>
+                 <tr valign="top">
+                    <th scope="row"><?php _e('شماره موبایل مدیر','cpp-full'); ?></th>
+                    <td><input type="text" name="cpp_admin_phone" value="<?php echo esc_attr( get_option('cpp_admin_phone') ); ?>" class="regular-text"/></td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row"><?php _e('قالب متن پیامک','cpp-full'); ?></th>
+                    <td>
+                        <textarea name="cpp_sms_text_template" rows="5" class="large-text"><?php echo esc_textarea( get_option('cpp_sms_text_template', "سفارش جدید:\nمحصول: {product_name}\nمشتری: {customer_name}\nتلفن: {phone}") ); ?></textarea>
+                         <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
+                    </td>
+                </tr>
+            </table>
             <?php
         }
         submit_button();
         ?>
     </form>
 </div>
+
+<template id="cpp-email-template-html">
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+        <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 5px;">
+            <div style="text-align: center; border-bottom: 1px solid #dddddd; padding-bottom: 10px; margin-bottom: 20px;">
+                <h2 style="color: #0056b3;">اطلاع‌رسانی سفارش جدید</h2>
+            </div>
+            <div style="direction: rtl; text-align: right;">
+                <p>سلام،</p>
+                <p>یک سفارش جدید از طریق وب‌سایت ثبت شده است. جزئیات به شرح زیر است:</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px;">
+                    <tbody>
+                        <tr style="background-color: #f9f9f9;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">محصول:</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">{product_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">نام مشتری:</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">{customer_name}</td>
+                        </tr>
+                        <tr style="background-color: #f9f9f9;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">شماره تماس:</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">{phone}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">مقدار/تعداد:</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">{qty}</td>
+                        </tr>
+                        <tr style="background-color: #f9f9f9;">
+                            <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">توضیحات:</td>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">{note}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>لطفاً در اسرع وقت جهت پیگیری با مشتری تماس بگیرید.</p>
+            </div>
+            <div style="text-align: center; font-size: 12px; color: #777777; border-top: 1px solid #dddddd; padding-top: 10px; margin-top: 20px;">
+                <p>این ایمیل به صورت خودکار ارسال شده است.</p>
+            </div>
+        </div>
+    </div>
+</template>
