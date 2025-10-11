@@ -33,11 +33,9 @@ function cpp_activate() {
         update_option('cpp_email_subject_template', 'سفارش جدید: {product_name}');
         update_option('cpp_email_body_template', '<p style="direction:rtl; text-align:right;">سفارش جدیدی از طریق وب‌سایت ثبت شده است:<br><br><strong>محصول:</strong> {product_name}<br><strong>نام مشتری:</strong> {customer_name}<br><strong>شماره تماس:</strong> {phone}<br><strong>تعداد/مقدار:</strong> {qty}<br><strong>توضیحات مشتری:</strong> {note}<br></p>');
     }
-    // --- شروع تغییر: افزودن مقدار پیش‌فرض برای تنظیمات جدید ---
     if (get_option('cpp_products_per_page') === false) {
         update_option('cpp_products_per_page', 5);
     }
-    // --- پایان تغییر ---
 }
 
 // Shortcode [cpp_products_list]
@@ -85,30 +83,50 @@ function cpp_products_list_shortcode($atts) {
 // Shortcode [cpp_products_grid_view]
 add_shortcode('cpp_products_grid_view', 'cpp_products_grid_view_shortcode');
 function cpp_products_grid_view_shortcode($atts) {
-    // --- شروع تغییر: حذف more_link چون دیگر استفاده نمی‌شود ---
     $atts = shortcode_atts([], $atts, 'cpp_products_grid_view');
-    // --- پایان تغییر ---
     
     global $wpdb;
     $categories = CPP_Core::get_all_categories();
     
-    // --- شروع تغییر: واکشی محصولات با توجه به تنظیمات صفحه‌بندی ---
     $products_per_page = get_option('cpp_products_per_page', 5);
     $products = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1 ORDER BY id DESC LIMIT %d",
         $products_per_page
     ));
     $total_products = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
-    // --- پایان تغییر ---
 
     if (!$products) { return '<p class="cpp-no-products">' . __('محصولی برای نمایش یافت نشد.', 'cpp-full') . '</p>'; }
     
     ob_start();
-    // --- شروع تغییر: پاس دادن متغیرهای جدید به قالب ---
     include CPP_TEMPLATES_DIR . 'shortcode-grid-view.php';
-    // --- پایان تغییر ---
     return ob_get_clean();
 }
+
+// --- شروع تغییر: افزودن شورت‌کد جدید ---
+add_shortcode('cpp_products_grid_view_no_date', 'cpp_products_grid_view_no_date_shortcode');
+function cpp_products_grid_view_no_date_shortcode($atts) {
+    $atts = shortcode_atts([], $atts, 'cpp_products_grid_view_no_date');
+    
+    global $wpdb;
+    $categories = CPP_Core::get_all_categories();
+    
+    $products_per_page = get_option('cpp_products_per_page', 5);
+    $products = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1 ORDER BY id DESC LIMIT %d",
+        $products_per_page
+    ));
+    $total_products = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
+    
+    // واکشی جدیدترین زمان بروزرسانی
+    $last_updated_time = $wpdb->get_var("SELECT MAX(last_updated_at) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
+
+    if (!$products) { return '<p class="cpp-no-products">' . __('محصولی برای نمایش یافت نشد.', 'cpp-full') . '</p>'; }
+    
+    ob_start();
+    include CPP_TEMPLATES_DIR . 'shortcode-grid-view-no-date.php';
+    return ob_get_clean();
+}
+// --- پایان تغییر ---
 
 add_action('wp_enqueue_scripts', 'cpp_front_assets');
 function cpp_front_assets() {
@@ -118,7 +136,6 @@ function cpp_front_assets() {
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', [], null, true);
     wp_enqueue_script('cpp-front-js', CPP_ASSETS_URL . 'js/front.js', ['jquery', 'chart-js'], CPP_VERSION, true);
     
-    // --- شروع تغییر: افزودن متغیرهای جدید برای جاوا اسکریپت ---
     wp_localize_script('cpp-front-js', 'cpp_front_vars', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('cpp_front_nonce'),
@@ -128,7 +145,6 @@ function cpp_front_assets() {
             'no_more_products' => __('محصول دیگری برای نمایش وجود ندارد.', 'cpp-full'),
         ]
     ));
-    // --- پایان تغییر ---
 }
 
 add_action('wp_footer', 'cpp_add_modals_to_footer');
@@ -137,7 +153,6 @@ function cpp_add_modals_to_footer() {
     if (file_exists($modals_template)) { include $modals_template; }
 }
 
-// --- شروع تغییر: افزودن تابع AJAX برای بارگذاری بیشتر محصولات ---
 add_action('wp_ajax_cpp_load_more_products', 'cpp_load_more_products');
 add_action('wp_ajax_nopriv_cpp_load_more_products', 'cpp_load_more_products');
 function cpp_load_more_products() {
@@ -147,6 +162,9 @@ function cpp_load_more_products() {
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $products_per_page = get_option('cpp_products_per_page', 5);
     $offset = $page * $products_per_page;
+    // --- شروع تغییر: افزودن یک پارامتر برای تشخیص نوع شورت‌کد ---
+    $show_date_column = isset($_POST['show_date']) && $_POST['show_date'] === 'true';
+    // --- پایان تغییر ---
 
     $products = $wpdb->get_results($wpdb->prepare(
         "SELECT * FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1 ORDER BY id DESC LIMIT %d OFFSET %d",
@@ -157,8 +175,6 @@ function cpp_load_more_products() {
     if ($products) {
         ob_start();
         foreach ($products as $product) {
-            // برای سادگی، بخشی از HTML ردیف جدول را مستقیماً اینجا می‌سازیم
-            // این کار باعث می‌شود نیازی به فراخوانی کل فایل قالب نباشد
             $disable_base_price = get_option('cpp_disable_base_price', 0);
             $cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
             $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
@@ -168,8 +184,10 @@ function cpp_load_more_products() {
                 <td><?php echo esc_html($product->product_type); ?></td>
                 <td><?php echo esc_html($product->unit); ?></td>
                 <td><?php echo esc_html($product->load_location); ?></td>
-                <td><?php echo esc_html(date_i18n('Y/m/d', strtotime($product->last_updated_at))); ?></td>
                 
+                <?php if ($show_date_column): ?>
+                <td><?php echo esc_html(date_i18n('Y/m/d H:i', strtotime($product->last_updated_at))); ?></td>
+                <?php endif; ?>
                 <?php if (!$disable_base_price) : ?>
                 <td class="col-price">
                     <?php 
@@ -207,5 +225,4 @@ function cpp_load_more_products() {
         wp_send_json_error();
     }
 }
-// --- پایان تغییر ---
 ?>
