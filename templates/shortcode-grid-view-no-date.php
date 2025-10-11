@@ -9,13 +9,14 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
 
 <div class="cpp-grid-view-wrapper">
     
-    <?php if ($last_updated_time): ?>
-    <div class="cpp-last-update-notice">
-        <?php echo __('آخرین بروزرسانی کلی:', 'cpp-full') . ' ' . date_i18n('Y/m/d H:i', strtotime($last_updated_time)); ?>
-    </div>
-    <?php endif; ?>
-    <?php if (!empty($categories)) : ?>
+    <?php if (!empty($categories) || $last_updated_time) : ?>
         <div class="cpp-grid-view-filters">
+            <?php if ($last_updated_time): ?>
+            <span class="last-update-display">
+                <?php echo __('آخرین بروزرسانی:', 'cpp-full') . ' ' . date_i18n('Y/m/d H:i', strtotime($last_updated_time)); ?>
+            </span>
+            <?php endif; ?>
+
             <a href="#" class="filter-btn active" data-cat-id="all"><?php _e('همه دسته‌ها', 'cpp-full'); ?></a>
             <?php foreach ($categories as $cat) : ?>
                 <a href="#" class="filter-btn" data-cat-id="<?php echo esc_attr($cat->id); ?>"><?php echo esc_html($cat->name); ?></a>
@@ -44,6 +45,7 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
                     <td><?php echo esc_html($product->product_type); ?></td>
                     <td><?php echo esc_html($product->unit); ?></td>
                     <td><?php echo esc_html($product->load_location); ?></td>
+                    
                     <?php if (!$disable_base_price) : ?>
                     <td class="col-price">
                         <?php 
@@ -84,6 +86,6 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
     <?php if (count($products) < $total_products) : ?>
     <div class="cpp-grid-view-footer">
         <button class="cpp-view-more-btn" data-page="0" data-show-date="false"><?php _e('مشاهده بیشتر', 'cpp-full'); ?></button>
-        </div>
+    </div>
     <?php endif; ?>
 </div>
