@@ -53,18 +53,15 @@
 .cpp-grid-view-table td {
     padding: 15px 10px;
     vertical-align: middle;
+    border-bottom: 1px solid #eee; /* تضمین خط زیرین برای همه سلول‌ها */
 }
 .cpp-grid-view-table thead th {
     color: #888;
     font-weight: normal;
     font-size: 13px;
-    border-bottom: 1px solid #eee;
 }
-.cpp-grid-view-table tbody tr.product-row {
-    border-bottom: 1px solid #eee;
-}
-.cpp-grid-view-table tbody tr.product-row:last-child {
-    border-bottom: none;
+.cpp-grid-view-table tbody tr.product-row:last-child td {
+    border-bottom: none; /* حذف خط زیرین برای آخرین ردیف */
 }
 
 /* استایل برای ستون نام محصول (حاوی تصویر و متن) */
@@ -79,9 +76,11 @@
 .cpp-grid-view-table .col-product-name img {
     width: 50px;
     height: 50px;
-    object-fit: cover;
+    object-fit: contain; /* تغییر از cover به contain برای نمایش کامل تصویر */
     border-radius: 5px;
     flex-shrink: 0;
+    background-color: #fff; /* پس‌زمینه سفید برای تصاویری که فضای خالی دارند */
+    border: 1px solid #eee;
 }
 
 .cpp-grid-view-table .col-price,
