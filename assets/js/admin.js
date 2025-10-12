@@ -4,15 +4,14 @@ jQuery(document).ready(function($) {
     $('.cpp-accordion-header').on('click', function() {
         $(this).toggleClass('active').next('.cpp-accordion-content').slideToggle(300);
     });
-    // بستن آکاردئون‌ها در بارگذاری اولیه صفحه
+    // بستن آکاردئون‌ها در بارگذاری اولیه صفحه (مگر اینکه خطایی داخلشان باشد)
     if ($('.cpp-accordion-content').length && !$('.cpp-accordion-content').find('.error').length) {
         $('.cpp-accordion-content').hide(); 
         $('.cpp-accordion-header').removeClass('active'); 
     }
 
-    // مدیریت آپلود عکس
+    // مدیریت آپلود عکس (نسخه اصلاح شده برای کار با چندین دکمه)
     var mediaUploader;
-    // به دلیل اینکه فرم‌ها با ایجکس لود می‌شوند، از event delegation استفاده می‌کنیم
     $(document).on('click', '.cpp-upload-btn', function(e) {
         e.preventDefault();
         var button = $(this);
@@ -40,8 +39,11 @@ jQuery(document).ready(function($) {
     $(document).on('dblclick', '.cpp-quick-edit, .cpp-quick-edit-select', function() {
         var cell = $(this);
         if (cell.hasClass('editing')) return;
-        var id = cell.data('id'), field = cell.data('field'), table_type = cell.data('table-type'), original_text = cell.text().trim();
-        cell.data('original-content', cell.html()).addClass('editing');
+        var id = cell.data('id'), field = cell.data('field'), table_type = cell.data('table-type');
+        var original_html = cell.html(); // ذخیره کل HTML برای بازگردانی
+        var original_text = cell.clone().children().remove().end().text().trim(); // استخراج متن خالص
+
+        cell.data('original-content', original_html).addClass('editing');
         var input_element;
         if (cell.hasClass('cpp-quick-edit-select')) {
             var current_value = cell.data('current');
@@ -59,7 +61,7 @@ jQuery(document).ready(function($) {
         var buttons = $('<div>').addClass('cpp-quick-edit-buttons').css('margin-top', '5px').append(save_btn).append(cancel_btn);
         cell.html('').append(input_element).append(buttons);
         input_element.focus();
-        save_btn.on('click', function() { performSave(cell, id, field, table_type); });
+        save_btn.on('click', function() { performSave(cell, id, field, table_type, original_html); });
         cancel_btn.on('click', function() { cell.removeClass('editing').html(cell.data('original-content')); });
         input_element.on('keydown', function(e) {
             if (e.key === 'Escape') cancel_btn.click();
@@ -70,7 +72,7 @@ jQuery(document).ready(function($) {
         });
     });
     
-    function performSave(cell, id, field, table_type) {
+    function performSave(cell, id, field, table_type, original_html) {
         var new_value = cell.find('.cpp-quick-edit-input').val();
         cell.removeClass('editing').html('در حال ذخیره...');
         $.post(cpp_admin_vars.ajax_url, {
@@ -85,7 +87,12 @@ jQuery(document).ready(function($) {
                 } else {
                     display_value = new_value.replace(/\n/g, '<br>');
                 }
-                cell.html(display_value);
+                
+                // بازگرداندن ساختار HTML قبلی و فقط جایگزینی متن
+                var new_html = $(original_html);
+                new_html.text(display_value);
+                cell.html(new_html);
+
                 if (response.data.new_time) { 
                     cell.closest('tr').find('.cpp-last-update').text(response.data.new_time);
                     if (table_type === 'orders') {
