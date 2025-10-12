@@ -4,20 +4,30 @@ jQuery(document).ready(function($) {
     $('.cpp-accordion-header').on('click', function() {
         $(this).toggleClass('active').next('.cpp-accordion-content').slideToggle(300);
     });
-    if ($('.cpp-accordion-content').length) {
+    // بستن آکاردئون‌ها در بارگذاری اولیه صفحه
+    if ($('.cpp-accordion-content').length && !$('.cpp-accordion-content').find('.error').length) {
         $('.cpp-accordion-content').hide(); 
         $('.cpp-accordion-header').removeClass('active'); 
     }
 
     // مدیریت آپلود عکس
     var mediaUploader;
+    // به دلیل اینکه فرم‌ها با ایجکس لود می‌شوند، از event delegation استفاده می‌کنیم
     $(document).on('click', '.cpp-upload-btn', function(e) {
         e.preventDefault();
         var button = $(this);
-        var input_field = button.siblings('input[type="text"]');
-        var preview_img_container = button.siblings('.cpp-image-preview');
+        var inputId = button.data("input-id");
+        var input_field = jQuery("#" + inputId);
+        var preview_img_container = input_field.closest('.cpp-image-uploader-wrapper').find(".cpp-image-preview");
+
         if (mediaUploader) { mediaUploader.open(); return; }
-        mediaUploader = wp.media({ title: 'انتخاب یا آپلود تصویر', button: { text: 'استفاده از این تصویر' }, multiple: false });
+
+        mediaUploader = wp.media({ 
+            title: 'انتخاب یا آپلود تصویر', 
+            button: { text: 'استفاده از این تصویر' }, 
+            multiple: false 
+        });
+
         mediaUploader.on('select', function() {
             var attachment = mediaUploader.state().get('selection').first().toJSON();
             input_field.val(attachment.url);
@@ -36,7 +46,7 @@ jQuery(document).ready(function($) {
         if (cell.hasClass('cpp-quick-edit-select')) {
             var current_value = cell.data('current');
             input_element = $('<select>').addClass('cpp-quick-edit-input');
-            var options_list = (table_type === 'orders') ? cpp_admin_vars.order_statuses : cppStatusOptions;
+            var options_list = (table_type === 'orders') ? cpp_admin_vars.order_statuses : (typeof cppStatusOptions !== 'undefined' ? cppStatusOptions : {});
             $.each(options_list, function(val, text) {
                 $('<option>').val(val).text(text).prop('selected', val == current_value).appendTo(input_element);
             });
@@ -53,7 +63,10 @@ jQuery(document).ready(function($) {
         cancel_btn.on('click', function() { cell.removeClass('editing').html(cell.data('original-content')); });
         input_element.on('keydown', function(e) {
             if (e.key === 'Escape') cancel_btn.click();
-            if (e.key === 'Enter' && input_type === 'text') save_btn.click();
+            if (e.key === 'Enter' && input_type === 'text') {
+                e.preventDefault();
+                save_btn.click();
+            }
         });
     });
     
@@ -66,16 +79,22 @@ jQuery(document).ready(function($) {
             if (response.success) {
                 var display_value;
                 if (cell.hasClass('cpp-quick-edit-select')) {
-                    var options_list = (table_type === 'orders') ? cpp_admin_vars.order_statuses : cppStatusOptions;
+                    var options_list = (table_type === 'orders') ? cpp_admin_vars.order_statuses : (typeof cppStatusOptions !== 'undefined' ? cppStatusOptions : {});
                     display_value = options_list[new_value];
                     cell.data('current', new_value);
                 } else {
                     display_value = new_value.replace(/\n/g, '<br>');
                 }
                 cell.html(display_value);
-                if (response.data.new_time) { cell.closest('tr').find('.cpp-last-update').text(response.data.new_time); }
+                if (response.data.new_time) { 
+                    cell.closest('tr').find('.cpp-last-update').text(response.data.new_time);
+                    if (table_type === 'orders') {
+                        // برای رفرش شدن عدد کنار منو
+                        window.location.reload();
+                    }
+                }
             } else {
-                alert('خطا: ' + response.data);
+                alert('خطا: ' + (response.data || 'خطای نامشخص'));
                 cell.html(cell.data('original-content'));
             }
         }).fail(function() {
@@ -85,13 +104,15 @@ jQuery(document).ready(function($) {
     }
 
     // منطق پاپ‌آپ ویرایش
-    $(document).on('click', '.cpp-edit-button', function() {
-        var productId = $(this).data('product-id');
-        openEditModal({ action: 'cpp_fetch_product_edit_form', id: productId });
-    });
-    $(document).on('click', '.cpp-edit-cat-button', function() {
-        var catId = $(this).data('cat-id');
-        openEditModal({ action: 'cpp_fetch_category_edit_form', id: catId });
+    $(document).on('click', '.cpp-edit-button, .cpp-edit-cat-button', function() {
+        var button = $(this);
+        var ajax_data = {};
+        if (button.hasClass('cpp-edit-button')) {
+            ajax_data = { action: 'cpp_fetch_product_edit_form', id: button.data('product-id') };
+        } else {
+            ajax_data = { action: 'cpp_fetch_category_edit_form', id: button.data('cat-id') };
+        }
+        openEditModal(ajax_data);
     });
 
     function openEditModal(ajax_data) {
@@ -104,6 +125,7 @@ jQuery(document).ready(function($) {
                 $('#cpp-edit-modal').removeClass('loading');
                 if (response.success) {
                     $('.cpp-edit-modal-content').html(response.data.html);
+                    // دوباره فراخوانی می‌کنیم تا آپلودر در مودال هم کار کند
                     if(typeof window.cpp_init_media_uploader === 'function') {
                         window.cpp_init_media_uploader();
                     }
@@ -114,7 +136,7 @@ jQuery(document).ready(function($) {
             })
             .fail(function() {
                 $('#cpp-edit-modal').removeClass('loading');
-                $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطای اتصال سرور. (ممکن است یک خطای PHP در سرور وجود داشته باشد)</p>');
+                $('.cpp-edit-modal-content').html('<p style="color:red; text-align:center; padding: 20px;">خطای اتصال سرور.</p>');
             });
     }
     
@@ -150,13 +172,11 @@ jQuery(document).ready(function($) {
     }
 
     // مدیریت ذخیره فرم‌های پاپ آپ
-    $(document).on('submit', '#cpp-edit-product-form', function(e) {
+    $(document).on('submit', '#cpp-edit-product-form, #cpp-edit-category-form', function(e) {
         e.preventDefault();
-        submitEditForm($(this), { action: 'cpp_handle_edit_product_ajax' });
-    });
-    $(document).on('submit', '#cpp-edit-category-form', function(e) {
-        e.preventDefault();
-        submitEditForm($(this), { action: 'cpp_handle_edit_category_ajax' });
+        var form = $(this);
+        var action = form.attr('id') === 'cpp-edit-product-form' ? 'cpp_handle_edit_product_ajax' : 'cpp_handle_edit_category_ajax';
+        submitEditForm(form, { action: action });
     });
 
     function submitEditForm(form, ajax_data) {
@@ -191,7 +211,13 @@ jQuery(document).ready(function($) {
     $('#cpp-load-email-template').on('click', function() {
         if (confirm('آیا مطمئنید؟ محتوای فعلی فیلد قالب ایمیل با قالب پیش‌فرض جایگزین خواهد شد.')) {
             var templateHtml = $('#cpp-email-template-html').html();
-            $('#cpp_email_body_template').val(templateHtml.trim());
+            // بررسی می‌کنیم که ویرایشگر TinyMCE برای این فیلد فعال است یا نه
+            if (typeof tinymce !== 'undefined' && tinymce.get('cpp_email_body_template')) {
+                tinymce.get('cpp_email_body_template').setContent(templateHtml.trim());
+            } else {
+                // اگر ویرایشگر در حالت متنی (HTML) باشد
+                $('#cpp_email_body_template').val(templateHtml.trim());
+            }
         }
     });
 });
