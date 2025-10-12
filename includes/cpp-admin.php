@@ -3,7 +3,6 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * مدیریت بخش پیشخوان وردپرس افزونه
- * شامل ثبت منوها، اسکریپت‌ها، استایل‌ها و مدیریت ایجکس
  */
 
 // ۱. ثبت و بارگذاری اسکریپت‌ها و استایل‌های بخش مدیریت
@@ -22,7 +21,6 @@ function cpp_admin_assets($hook) {
     wp_enqueue_script('cpp-admin-js', CPP_ASSETS_URL . 'js/admin.js', ['jquery', 'wp-i18n', 'chart-js'], CPP_VERSION, true);
     
     // افزودن اسکریپت و استایل انتخاب‌گر رنگ فقط برای صفحه تنظیمات
-    // هوک صحیح برای صفحه تنظیمات ما "price-management_page_custom-prices-settings" است
     if ($hook === 'price-management_page_custom-prices-settings') {
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('cpp-color-picker-init', CPP_ASSETS_URL . 'js/admin-color-picker.js', ['wp-color-picker', 'jquery'], CPP_VERSION, true);
@@ -64,7 +62,7 @@ function cpp_admin_assets($hook) {
                 var button = jQuery(this);
                 var inputId = button.data("input-id") || button.siblings("input[type=\"text\"]").attr("id");
                 var input_field = jQuery("#" + inputId);
-                var preview_img_container = input_field.parent().find(".cpp-image-preview");
+                var preview_img_container = input_field.closest(".cpp-image-uploader-wrapper").find(".cpp-image-preview");
 
                 if (mediaUploader) { mediaUploader.open(); return; }
                 mediaUploader = wp.media({ title: "انتخاب یا آپلود تصویر", button: { text: "استفاده از این تصویر" }, multiple: false });
@@ -78,7 +76,9 @@ function cpp_admin_assets($hook) {
         };
         // فراخوانی اولیه برای صفحاتی که فرم در آن‌ها مستقیم لود می‌شود
         jQuery(document).ready(function(){
-            window.cpp_init_media_uploader();
+            if(typeof window.cpp_init_media_uploader === "function"){
+                window.cpp_init_media_uploader();
+            }
         });
     ', 'after');
 }
@@ -103,7 +103,6 @@ add_action('admin_menu', 'cpp_add_order_count_bubble', 99);
 function cpp_add_order_count_bubble() {
     global $wpdb, $menu;
     
-    // فقط در صورتی اجرا شود که کاربر دسترسی لازم را داشته باشد
     $capability = get_option('cpp_admin_capability', 'manage_options');
     if (!current_user_can($capability)) {
         return;
@@ -157,7 +156,7 @@ function cpp_handle_admin_actions() {
         if (!isset($_POST['cpp_add_product_nonce']) || !wp_verify_nonce($_POST['cpp_add_product_nonce'], 'cpp_add_product_action')) { wp_die(__('بررسی امنیتی ناموفق بود.', 'cpp-full')); }
         $data = ['cat_id' => intval($_POST['cat_id']),'name' => sanitize_text_field($_POST['name']),'price' => sanitize_text_field($_POST['price']),'min_price' => sanitize_text_field($_POST['min_price']),'max_price' => sanitize_text_field($_POST['max_price']),'product_type' => sanitize_text_field($_POST['product_type']),'unit' => sanitize_text_field($_POST['unit']),'load_location' => sanitize_text_field($_POST['load_location']),'is_active' => intval($_POST['is_active']),'description' => sanitize_textarea_field($_POST['description']),'image_url' => esc_url_raw($_POST['image_url']),'last_updated_at' => current_time('mysql')];
         $inserted = $wpdb->insert(CPP_DB_PRODUCTS, $data);
-        if ($inserted) { $product_id = $wpdb->insert_id; CPP_Core::save_price_history($product_id, $data); }
+        if ($inserted) { $product_id = $wpdb->insert_id; CPP_Core::save_price_history($product_id, ['price' => $data['price']]); }
         $redirect_url = add_query_arg('cpp_message', $inserted ? 'product_added' : 'product_add_failed', admin_url('admin.php?page=custom-prices-products'));
         wp_redirect($redirect_url); exit;
     }
@@ -207,18 +206,25 @@ function cpp_handle_edit_product_ajax() {
     $product_id = intval($_POST['product_id']);
     if (!$product_id) { wp_send_json_error(__('شناسه محصول نامعتبر است.', 'cpp-full')); }
     
-    $old_price = $wpdb->get_var($wpdb->prepare("SELECT price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $product_id));
+    $old_data = $wpdb->get_row($wpdb->prepare("SELECT price, min_price, max_price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $product_id));
     $data = [
         'cat_id' => intval($_POST['cat_id']), 'name' => sanitize_text_field($_POST['name']), 'price' => sanitize_text_field($_POST['price']),
         'min_price' => sanitize_text_field($_POST['min_price']), 'max_price' => sanitize_text_field($_POST['max_price']), 'product_type' => sanitize_text_field($_POST['product_type']),
         'unit' => sanitize_text_field($_POST['unit']), 'load_location' => sanitize_text_field($_POST['load_location']), 'is_active' => intval($_POST['is_active']),
-        'description' => sanitize_textarea_field($_POST['description']), 'image_url' => esc_url_raw($_POST['image_url']), 'last_updated_at' => current_time('mysql')
+        'description' => wp_kses_post($_POST['description']), 'image_url' => esc_url_raw($_POST['image_url']), 'last_updated_at' => current_time('mysql')
     ];
     
     $updated = $wpdb->update(CPP_DB_PRODUCTS, $data, ['id' => $product_id]);
     
     if ($updated !== false) {
-        if ($old_price != $data['price']) { CPP_Core::save_price_history($product_id, $data); }
+        $price_data_changed = [];
+        if($old_data->price != $data['price']) $price_data_changed['price'] = $data['price'];
+        if($old_data->min_price != $data['min_price']) $price_data_changed['min_price'] = $data['min_price'];
+        if($old_data->max_price != $data['max_price']) $price_data_changed['max_price'] = $data['max_price'];
+
+        if(!empty($price_data_changed)){
+            CPP_Core::save_price_history($product_id, $price_data_changed);
+        }
         wp_send_json_success(__('محصول با موفقیت به‌روزرسانی شد.', 'cpp-full'));
     } else {
         wp_send_json_error(__('خطا در به‌روزرسانی محصول.', 'cpp-full'));
@@ -268,7 +274,7 @@ function cpp_quick_update() {
     $field = sanitize_key($_POST['field']);
     $table_type = sanitize_key($_POST['table_type']);
     
-    if ($field === 'description' || $field === 'admin_note') { $value = sanitize_textarea_field($_POST['value']); } 
+    if ($field === 'description' || $field === 'admin_note') { $value = wp_kses_post($_POST['value']); } 
     elseif ($field === 'is_active') { $value = intval($_POST['value']); } 
     else { $value = sanitize_text_field($_POST['value']); }
     
@@ -289,9 +295,9 @@ function cpp_quick_update() {
     
     if ($table_type === 'products') {
         $data_to_update['last_updated_at'] = current_time('mysql');
-        $old_price = $wpdb->get_var($wpdb->prepare("SELECT price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $id));
-        if ($field === 'price' && $old_price !== $value) {
-            CPP_Core::save_price_history($id, ['price' => $value]); 
+        $old_data = $wpdb->get_row($wpdb->prepare("SELECT price, min_price, max_price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $id));
+        if (in_array($field, ['price', 'min_price', 'max_price']) && $old_data->$field != $value) {
+            CPP_Core::save_price_history($id, [$field => $value]); 
         }
         $response_data['new_time'] = date_i18n('Y/m/d H:i:s', current_time('timestamp'));
     }
