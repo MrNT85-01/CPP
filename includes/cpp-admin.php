@@ -12,7 +12,6 @@ function cpp_admin_assets($hook) {
     // بررسی اینکه آیا در یکی از صفحات افزونه هستیم یا خیر
     $is_cpp_page = strpos($hook, 'custom-prices') !== false;
 
-    // اگر صفحه فعلی، یکی از صفحات افزونه ما یا صفحات مرتبط دیگر نیست، اسکریپت‌ها را بارگذاری نکن
     if (!$is_cpp_page && $hook !== 'post.php' && $hook !== 'post-new.php' && !isset($_GET['elementor-preview'])) return; 
 
     // کتابخانه‌های عمومی مورد نیاز
@@ -63,8 +62,9 @@ function cpp_admin_assets($hook) {
             jQuery(document).off("click", ".cpp-upload-btn").on("click", ".cpp-upload-btn", function(e) {
                 e.preventDefault();
                 var button = jQuery(this);
-                var input_field = button.siblings("input[type=\"text\"]");
-                var preview_img_container = button.siblings(".cpp-image-preview");
+                var inputId = button.data("input-id") || button.siblings("input[type=\"text\"]").attr("id");
+                var input_field = jQuery("#" + inputId);
+                var preview_img_container = input_field.parent().find(".cpp-image-preview");
 
                 if (mediaUploader) { mediaUploader.open(); return; }
                 mediaUploader = wp.media({ title: "انتخاب یا آپلود تصویر", button: { text: "استفاده از این تصویر" }, multiple: false });
@@ -76,22 +76,52 @@ function cpp_admin_assets($hook) {
                 mediaUploader.open();
             });
         };
+        // فراخوانی اولیه برای صفحاتی که فرم در آن‌ها مستقیم لود می‌شود
+        jQuery(document).ready(function(){
+            window.cpp_init_media_uploader();
+        });
     ', 'after');
 }
 
 // ۲. ثبت منوهای افزونه در پیشخوان وردپرس
 add_action('admin_menu', 'cpp_admin_menu');
 function cpp_admin_menu() {
-    add_menu_page( __('مدیریت قیمت‌ها و سفارشات', 'cpp-full'), __('مدیریت قیمت', 'cpp-full'), 'manage_options', 'custom-prices-products', 'cpp_products_page', 'dashicons-tag', 30 );
-    add_submenu_page('custom-prices-products', __('دسته‌بندی‌ها', 'cpp-full'), __('دسته‌بندی‌ها', 'cpp-full'), 'manage_options', 'custom-prices-categories', 'cpp_categories_page');
-    add_submenu_page('custom-prices-products', __('سفارشات', 'cpp-full'), __('سفارشات مشتری', 'cpp-full'), 'manage_options', 'custom-prices-orders', 'cpp_orders_page');
-    add_submenu_page('custom-prices-products', __('شورت‌کدها', 'cpp-full'), __('شورت‌کدها', 'cpp-full'), 'manage_options', 'custom-prices-shortcodes', 'cpp_shortcodes_page');
-    add_submenu_page('custom-prices-products', __('تنظیمات', 'cpp-full'), __('تنظیمات', 'cpp-full'), 'manage_options', 'custom-prices-settings', 'cpp_settings_page');
-    // صفحه مخفی برای ویرایش محصول که در منو نمایش داده نمی‌شود
-    add_submenu_page( null, __('ویرایش محصول', 'cpp-full'), __('ویرایش محصول', 'cpp-full'), 'manage_options', 'custom-prices-product-edit', 'cpp_product_edit_page' );
+    // خواندن سطح دسترسی از تنظیمات با مقدار پیش‌فرض 'manage_options' (برای مدیرکل)
+    $capability = get_option('cpp_admin_capability', 'manage_options');
+
+    add_menu_page( __('مدیریت قیمت‌ها و سفارشات', 'cpp-full'), __('مدیریت قیمت', 'cpp-full'), $capability, 'custom-prices-products', 'cpp_products_page', 'dashicons-tag', 30 );
+    add_submenu_page('custom-prices-products', __('دسته‌بندی‌ها', 'cpp-full'), __('دسته‌بندی‌ها', 'cpp-full'), $capability, 'custom-prices-categories', 'cpp_categories_page');
+    add_submenu_page('custom-prices-products', __('سفارشات', 'cpp-full'), __('سفارشات مشتری', 'cpp-full'), $capability, 'custom-prices-orders', 'cpp_orders_page');
+    add_submenu_page('custom-prices-products', __('شورت‌کدها', 'cpp-full'), __('شورت‌کدها', 'cpp-full'), $capability, 'custom-prices-shortcodes', 'cpp_shortcodes_page');
+    add_submenu_page('custom-prices-products', __('تنظیمات', 'cpp-full'), __('تنظیمات', 'cpp-full'), $capability, 'custom-prices-settings', 'cpp_settings_page');
+    // صفحه مخفی برای ویرایش محصول
+    add_submenu_page( null, __('ویرایش محصول', 'cpp-full'), __('ویرایش محصول', 'cpp-full'), $capability, 'custom-prices-product-edit', 'cpp_product_edit_page' );
 }
 
-// ۳. توابع Callback برای نمایش محتوای هر صفحه از منو
+// ۳. افزودن نشانگر عددی تعداد سفارشات جدید به منو
+add_action('admin_menu', 'cpp_add_order_count_bubble', 99);
+function cpp_add_order_count_bubble() {
+    global $wpdb, $menu;
+    
+    // فقط در صورتی اجرا شود که کاربر دسترسی لازم را داشته باشد
+    $capability = get_option('cpp_admin_capability', 'manage_options');
+    if (!current_user_can($capability)) {
+        return;
+    }
+
+    $count = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_ORDERS . " WHERE status = 'new_order'");
+    
+    if ($count > 0) {
+        foreach ($menu as $key => $value) {
+            if ($menu[$key][2] == 'custom-prices-products') {
+                $menu[$key][0] .= ' <span class="update-plugins count-' . $count . '"><span class="plugin-count">' . $count . '</span></span>';
+                return;
+            }
+        }
+    }
+}
+
+// ۴. توابع Callback برای نمایش محتوای هر صفحه از منو
 function cpp_products_page() { 
     include CPP_TEMPLATES_DIR . 'products.php'; 
     echo '<div id="cpp-edit-modal" class="cpp-modal-overlay" style="display: none;"><div class="cpp-modal-container"><span class="cpp-close-modal">×</span><div class="cpp-edit-modal-content"></div></div></div>';
@@ -105,7 +135,7 @@ function cpp_settings_page() { include CPP_TEMPLATES_DIR . 'settings.php'; }
 function cpp_shortcodes_page() { include CPP_TEMPLATES_DIR . 'shortcodes.php'; }
 function cpp_product_edit_page() { include CPP_TEMPLATES_DIR . 'product-edit.php'; }
 
-// ۴. مدیریت فرم‌های POST (افزودن و حذف)
+// ۵. مدیریت فرم‌های POST (افزودن و حذف)
 add_action('admin_init', 'cpp_handle_admin_actions');
 function cpp_handle_admin_actions() {
     global $wpdb;
@@ -127,7 +157,7 @@ function cpp_handle_admin_actions() {
         if (!isset($_POST['cpp_add_product_nonce']) || !wp_verify_nonce($_POST['cpp_add_product_nonce'], 'cpp_add_product_action')) { wp_die(__('بررسی امنیتی ناموفق بود.', 'cpp-full')); }
         $data = ['cat_id' => intval($_POST['cat_id']),'name' => sanitize_text_field($_POST['name']),'price' => sanitize_text_field($_POST['price']),'min_price' => sanitize_text_field($_POST['min_price']),'max_price' => sanitize_text_field($_POST['max_price']),'product_type' => sanitize_text_field($_POST['product_type']),'unit' => sanitize_text_field($_POST['unit']),'load_location' => sanitize_text_field($_POST['load_location']),'is_active' => intval($_POST['is_active']),'description' => sanitize_textarea_field($_POST['description']),'image_url' => esc_url_raw($_POST['image_url']),'last_updated_at' => current_time('mysql')];
         $inserted = $wpdb->insert(CPP_DB_PRODUCTS, $data);
-        if ($inserted) { $product_id = $wpdb->insert_id; CPP_Core::save_price_history($product_id, $data['price']); }
+        if ($inserted) { $product_id = $wpdb->insert_id; CPP_Core::save_price_history($product_id, $data); }
         $redirect_url = add_query_arg('cpp_message', $inserted ? 'product_added' : 'product_add_failed', admin_url('admin.php?page=custom-prices-products'));
         wp_redirect($redirect_url); exit;
     }
@@ -153,7 +183,7 @@ function cpp_handle_admin_actions() {
     }
 }
 
-// ۵. توابع AJAX برای محصولات
+// ۶. توابع AJAX برای محصولات
 add_action('wp_ajax_cpp_fetch_product_edit_form', 'cpp_fetch_product_edit_form');
 function cpp_fetch_product_edit_form() {
     if (!isset($_GET['security']) || !wp_verify_nonce($_GET['security'], 'cpp_admin_nonce')) {
@@ -188,14 +218,14 @@ function cpp_handle_edit_product_ajax() {
     $updated = $wpdb->update(CPP_DB_PRODUCTS, $data, ['id' => $product_id]);
     
     if ($updated !== false) {
-        if ($old_price != $data['price']) { CPP_Core::save_price_history($product_id, $data['price']); }
+        if ($old_price != $data['price']) { CPP_Core::save_price_history($product_id, $data); }
         wp_send_json_success(__('محصول با موفقیت به‌روزرسانی شد.', 'cpp-full'));
     } else {
         wp_send_json_error(__('خطا در به‌روزرسانی محصول.', 'cpp-full'));
     }
 }
 
-// ۶. توابع AJAX برای دسته‌بندی‌ها
+// ۷. توابع AJAX برای دسته‌بندی‌ها
 add_action('wp_ajax_cpp_fetch_category_edit_form', 'cpp_fetch_category_edit_form');
 function cpp_fetch_category_edit_form() {
     if (!isset($_GET['security']) || !wp_verify_nonce($_GET['security'], 'cpp_admin_nonce')) {
@@ -228,7 +258,7 @@ function cpp_handle_edit_category_ajax() {
     else { wp_send_json_error(__('خطا در به‌روزرسانی دسته‌بندی.', 'cpp-full')); }
 }
 
-// ۷. تابع AJAX برای ویرایش سریع (Quick Edit)
+// ۸. تابع AJAX برای ویرایش سریع (Quick Edit)
 add_action('wp_ajax_cpp_quick_update', 'cpp_quick_update');
 function cpp_quick_update() {
     check_ajax_referer('cpp_admin_nonce', 'security'); 
@@ -257,12 +287,13 @@ function cpp_quick_update() {
     $data_to_update = [$field => $value];
     $response_data = ['message' => 'با موفقیت به‌روزرسانی شد.'];
     
-    if ($table_type === 'products' && ($field === 'price' || $field === 'min_price' || $field === 'max_price')) {
-        $old_data = $wpdb->get_row($wpdb->prepare("SELECT price, min_price, max_price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $id));
-        if ($old_data->$field !== $value) {
-            CPP_Core::save_price_history($id, $data_to_update); 
-            $response_data['new_time'] = date_i18n('Y/m/d H:i:s', current_time('timestamp'));
+    if ($table_type === 'products') {
+        $data_to_update['last_updated_at'] = current_time('mysql');
+        $old_price = $wpdb->get_var($wpdb->prepare("SELECT price FROM " . CPP_DB_PRODUCTS . " WHERE id = %d", $id));
+        if ($field === 'price' && $old_price !== $value) {
+            CPP_Core::save_price_history($id, ['price' => $value]); 
         }
+        $response_data['new_time'] = date_i18n('Y/m/d H:i:s', current_time('timestamp'));
     }
     
     $updated = $wpdb->update($table, $data_to_update, ['id' => $id]);
@@ -272,7 +303,7 @@ function cpp_quick_update() {
     wp_send_json_success($response_data);
 }
 
-// ۸. هوک برای سازگاری با المنتور
+// ۹. هوک برای سازگاری با المنتور
 add_action('elementor/frontend/after_register_styles', 'cpp_enqueue_styles_elementor');
 function cpp_enqueue_styles_elementor() {
     if (!wp_style_is('cpp-front-css', 'enqueued')) {
