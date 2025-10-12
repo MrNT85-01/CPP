@@ -53,6 +53,9 @@
                     </td>
                 </tr>
             </table>
+
+            <hr>
+            <?php do_settings_sections('cpp_notification_settings_page'); // این بخش تست ایمیل را نمایش می‌دهد ?>
             
             <hr>
             <h3><?php _e('تنظیمات پیامک (SMS)','cpp-full'); ?></h3>
