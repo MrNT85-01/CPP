@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * مدیریت بخش پیشخوان وردپرس افزونه
+ * شامل ثبت منوها، اسکریپت‌ها، استایل‌ها و مدیریت ایجکس
  */
 
 // ۱. ثبت و بارگذاری اسکریپت‌ها و استایل‌های بخش مدیریت
@@ -11,17 +12,17 @@ function cpp_admin_assets($hook) {
     // بررسی اینکه آیا در یکی از صفحات افزونه هستیم یا خیر
     $is_cpp_page = strpos($hook, 'custom-prices') !== false;
 
-    if (!$is_cpp_page && $hook !== 'post.php' && $hook !== 'post-new.php' && !isset($_GET['elementor-preview'])) return; 
+    if (!$is_cpp_page && $hook !== 'post.php' && $hook !== 'post-new.php' && !isset($_GET['elementor-preview'])) return;
 
     // کتابخانه‌های عمومی مورد نیاز
-    wp_enqueue_media(); 
+    wp_enqueue_media();
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', [], null, true);
-    
+
     // اسکریپت اصلی مدیریت
     wp_enqueue_script('cpp-admin-js', CPP_ASSETS_URL . 'js/admin.js', ['jquery', 'wp-i18n', 'chart-js'], CPP_VERSION, true);
-    
+
     // افزودن اسکریپت و استایل انتخاب‌گر رنگ فقط برای صفحه تنظیمات
-    if ($hook === 'price-management_page_custom-prices-settings') {
+    if ($hook === 'toplevel_page_custom-prices-products' || $hook === 'custom-prices_page_custom-prices-settings') {
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('cpp-color-picker-init', CPP_ASSETS_URL . 'js/admin-color-picker.js', ['wp-color-picker', 'jquery'], CPP_VERSION, true);
     }
@@ -40,10 +41,10 @@ function cpp_admin_assets($hook) {
         'edit_url_base' => admin_url('admin.php?page=custom-prices-product-edit&id='),
         'order_statuses' => $order_statuses,
     ]);
-    
+
     // استایل اصلی بخش مدیریت
     wp_enqueue_style('cpp-admin-css', CPP_ASSETS_URL . 'css/admin.css', [], CPP_VERSION);
-    
+
     // استایل‌های درون‌خطی برای مودال (پاپ‌آپ)
     $custom_css = "
         .cpp-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; display: none; overflow-y: auto; }
@@ -314,5 +315,55 @@ add_action('elementor/frontend/after_register_styles', 'cpp_enqueue_styles_eleme
 function cpp_enqueue_styles_elementor() {
     if (!wp_style_is('cpp-front-css', 'enqueued')) {
          cpp_front_assets();
+    }
+}
+
+// ۱۰. تابع AJAX برای تست ارسال ایمیل
+add_action('wp_ajax_cpp_test_email', 'cpp_ajax_test_email');
+function cpp_ajax_test_email() {
+    check_ajax_referer('cpp_admin_nonce', 'security');
+    
+    $capability = get_option('cpp_admin_capability', 'manage_options');
+    if (!current_user_can($capability)) {
+        wp_send_json_error(['log' => 'Error: You do not have permission to perform this action.']);
+    }
+
+    $log = "--- Starting Email Test ---\n";
+    $log .= "Time: " . current_time('mysql') . "\n";
+
+    $to = get_option('cpp_admin_email', get_option('admin_email'));
+    if (empty($to) || !is_email($to)) {
+        $log .= "Error: Invalid or empty admin email address configured.\n";
+        wp_send_json_error(['log' => $log]);
+    }
+
+    $log .= "Attempting to send a test email to: " . $to . "\n";
+
+    $subject = 'ایمیل آزمایشی از افزونه مدیریت قیمت';
+    $message = '<p style="direction:rtl; text-align:right;">این یک ایمیل آزمایشی برای بررسی صحت عملکرد سیستم ارسال ایمیل وب‌سایت شماست.</p>';
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+
+    // استفاده از هوک برای گرفتن خطاهای دقیق
+    $error_message = '';
+    add_action('wp_mail_failed', function ($wp_error) use (&$error_message) {
+        $error_message = $wp_error->get_error_message();
+    });
+
+    $sent = wp_mail($to, $subject, $message, $headers);
+
+    if ($sent) {
+        $log .= "Success: The wp_mail() function was executed successfully.\n";
+        $log .= "This does not guarantee delivery. Please check the inbox at " . $to . ".\n";
+        $log .= "If the email is not received, please use an SMTP plugin like 'WP Mail SMTP' to improve deliverability.\n";
+        wp_send_json_success(['log' => $log]);
+    } else {
+        $log .= "Error: The wp_mail() function failed to execute.\n";
+        if (!empty($error_message)) {
+            $log .= "Error Details: " . $error_message . "\n";
+        } else {
+            $log .= "No specific error message was returned. This often happens due to server configuration issues.\n";
+        }
+        $log .= "Recommendation: Install and configure an SMTP plugin (e.g., WP Mail SMTP) to resolve this.\n";
+        wp_send_json_error(['log' => $log]);
     }
 }
