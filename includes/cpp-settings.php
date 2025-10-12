@@ -10,7 +10,9 @@ function cpp_register_settings_and_fields() {
     // === ثبت گروه‌های تنظیمات برای هر تب ===
     register_setting('cpp_general_settings_grp', 'cpp_disable_base_price');
     register_setting('cpp_general_settings_grp', 'cpp_products_per_page');
+    register_setting('cpp_general_settings_grp', 'cpp_admin_capability'); // دسترسی کاربران
 
+    register_setting('cpp_shortcode_settings_grp', 'cpp_default_product_image'); // لوگوی پیش‌فرض
     register_setting('cpp_shortcode_settings_grp', 'cpp_grid_with_date_show_image');
     register_setting('cpp_shortcode_settings_grp', 'cpp_grid_no_date_show_image');
     register_setting('cpp_shortcode_settings_grp', 'cpp_grid_with_date_button_color');
@@ -27,16 +29,17 @@ function cpp_register_settings_and_fields() {
     register_setting('cpp_notification_settings_grp', 'cpp_sms_text_template');
 
     // === تعریف بخش‌ها (Sections) برای هر تب ===
-    add_settings_section('cpp_general_section', __('تنظیمات عمومی', 'cpp-full'), null, 'cpp_general_settings_page');
-    add_settings_section('cpp_shortcode_section', __('تنظیمات شورت‌کدها', 'cpp-full'), null, 'cpp_shortcode_settings_page');
-    // بخش اعلان‌ها نیازی به section جدا ندارد چون فیلدها مستقیما در قالب نوشته شده‌اند
+    add_settings_section('cpp_general_section', null, null, 'cpp_general_settings_page');
+    add_settings_section('cpp_shortcode_section', null, null, 'cpp_shortcode_settings_page');
 
     // === تعریف فیلدها و اتصال آن‌ها به بخش‌ها ===
     // --- تب عمومی ---
     add_settings_field('cpp_disable_base_price', __('غیرفعال کردن قیمت پایه', 'cpp-full'), 'cpp_disable_base_price_callback', 'cpp_general_settings_page', 'cpp_general_section');
     add_settings_field('cpp_products_per_page', __('تعداد محصولات در هر بار بارگذاری', 'cpp-full'), 'cpp_products_per_page_callback', 'cpp_general_settings_page', 'cpp_general_section');
+    add_settings_field('cpp_admin_capability', __('سطح دسترسی به افزونه', 'cpp-full'), 'cpp_admin_capability_callback', 'cpp_general_settings_page', 'cpp_general_section');
 
     // --- تب شورت‌کدها ---
+    add_settings_field('cpp_default_product_image', __('لوگوی پیش‌فرض محصولات', 'cpp-full'), 'cpp_default_product_image_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_with_date_show_image', __('نمایش تصویر (شورت‌کد با تاریخ)', 'cpp-full'), 'cpp_grid_with_date_show_image_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_no_date_show_image', __('نمایش تصویر (شورت‌کد بدون تاریخ)', 'cpp-full'), 'cpp_grid_no_date_show_image_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_with_date_button_color', __('رنگ دکمه (شورت‌کد با تاریخ)', 'cpp-full'), 'cpp_grid_with_date_button_color_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
@@ -52,6 +55,31 @@ function cpp_disable_base_price_callback() {
 function cpp_products_per_page_callback() {
     echo '<input type="number" name="cpp_products_per_page" value="' . esc_attr(get_option('cpp_products_per_page', 5)) . '" class="small-text" min="1" />';
     echo '<p class="description">' . __('این تعداد محصول در شورت‌کد گرید در ابتدا نمایش داده می‌شود.', 'cpp-full') . '</p>';
+}
+
+function cpp_admin_capability_callback() {
+    $roles = get_editable_roles();
+    $current_capability = get_option('cpp_admin_capability', 'manage_options');
+    echo '<select name="cpp_admin_capability">';
+    foreach ($roles as $role => $details) {
+        $capability = isset($details['capabilities']['level_10']) ? 'manage_options' : (isset($details['capabilities']['edit_private_pages']) ? 'edit_private_pages' : 'edit_posts');
+        echo '<option value="' . esc_attr($capability) . '" ' . selected($current_capability, $capability, false) . '>' . esc_html($details['name']) . '</option>';
+    }
+    echo '</select>';
+    echo '<p class="description">' . __('حداقل نقش کاربری که می‌تواند به منوهای مدیریت این افزونه دسترسی داشته باشد را انتخاب کنید.', 'cpp-full') . '</p>';
+}
+
+function cpp_default_product_image_callback() {
+    $image_url = get_option('cpp_default_product_image', '');
+    echo '<div class="cpp-image-uploader-wrapper">';
+    echo '<input type="text" name="cpp_default_product_image" value="' . esc_url($image_url) . '" class="regular-text" id="cpp-default-image-url"/>';
+    echo '<button type="button" class="button cpp-upload-btn" data-input-id="cpp-default-image-url">' . __('انتخاب تصویر', 'cpp-full') . '</button>';
+    echo '<div class="cpp-image-preview">';
+    if ($image_url) {
+        echo '<img src="' . esc_url($image_url) . '" style="max-width: 100px; height: auto; margin-top: 10px;">';
+    }
+    echo '</div></div>';
+    echo '<p class="description">' . __('یک تصویر یا لوگو انتخاب کنید تا برای محصولاتی که تصویر ندارند، نمایش داده شود.', 'cpp-full') . '</p>';
 }
 
 function cpp_grid_with_date_show_image_callback() {
