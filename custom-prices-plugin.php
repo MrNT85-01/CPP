@@ -2,14 +2,14 @@
 /**
  * Plugin Name: Custom Prices & Orders
  * Description: افزونه مستقل برای مدیریت بازه قیمت‌ها، دسته‌بندی محصولات و ثبت سفارش‌های درخواست شده (بدون ووکامرس). شامل شورت‌کدهای نمایش (کامل، براساس دسته، یا براساس آی‌دی‌ها)، پاپ‌آپ سفارش، صفحه تنظیمات و خروجی اکسل/CSV سفارشات.
- * Version: 3.0.0
+ * Version: 3.1.0
  * Author: Mr.NT
  */
 
 if (!defined('ABSPATH')) exit;
 
 global $wpdb;
-define('CPP_VERSION', '3.0.0');
+define('CPP_VERSION', '3.1.0');
 define('CPP_PATH', plugin_dir_path(__FILE__));
 define('CPP_URL', plugin_dir_url(__FILE__));
 define('CPP_TEMPLATES_DIR', CPP_PATH . 'templates/');
