@@ -46,7 +46,7 @@
                         <?php
                             $content = get_option('cpp_email_body_template');
                             $editor_id = 'cpp_email_body_template';
-                            wp_editor($content, $editor_id, ['textarea_name' => 'cpp_email_body_template', 'media_buttons' => false, 'textarea_rows' => 15]);
+                            wp_editor(wp_kses_post($content), $editor_id, ['textarea_name' => 'cpp_email_body_template', 'media_buttons' => false, 'textarea_rows' => 15]);
                         ?>
                         <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
                         <button type="button" id="cpp-load-email-template" class="button" style="margin-top:10px;"><?php _e('بارگذاری قالب پیش‌فرض زیبا', 'cpp-full'); ?></button>
