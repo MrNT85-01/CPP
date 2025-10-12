@@ -31,6 +31,7 @@ function cpp_register_settings_and_fields() {
     // === تعریف بخش‌ها (Sections) برای هر تب ===
     add_settings_section('cpp_general_section', null, null, 'cpp_general_settings_page');
     add_settings_section('cpp_shortcode_section', null, null, 'cpp_shortcode_settings_page');
+    add_settings_section('cpp_email_test_section', __('تست ارسال ایمیل', 'cpp-full'), null, 'cpp_notification_settings_page');
 
     // === تعریف فیلدها و اتصال آن‌ها به بخش‌ها ===
     // --- تب عمومی ---
@@ -44,7 +45,11 @@ function cpp_register_settings_and_fields() {
     add_settings_field('cpp_grid_no_date_show_image', __('نمایش تصویر (شورت‌کد بدون تاریخ)', 'cpp-full'), 'cpp_grid_no_date_show_image_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_with_date_button_color', __('رنگ دکمه (شورت‌کد با تاریخ)', 'cpp-full'), 'cpp_grid_with_date_button_color_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
     add_settings_field('cpp_grid_no_date_button_color', __('رنگ دکمه (شورت‌کد بدون تاریخ)', 'cpp-full'), 'cpp_grid_no_date_button_color_callback', 'cpp_shortcode_settings_page', 'cpp_shortcode_section');
+
+    // --- تب اعلان‌ها ---
+    add_settings_field('cpp_email_test', __('ارسال ایمیل آزمایشی', 'cpp-full'), 'cpp_email_test_callback', 'cpp_notification_settings_page', 'cpp_email_test_section');
 }
+
 
 // === توابع Callback برای نمایش HTML هر فیلد ===
 function cpp_disable_base_price_callback() {
@@ -106,4 +111,10 @@ function cpp_grid_with_date_button_color_callback() {
 function cpp_grid_no_date_button_color_callback() {
     echo '<input type="text" name="cpp_grid_no_date_button_color" value="' . esc_attr(get_option('cpp_grid_no_date_button_color', '#0073aa')) . '" class="cpp-color-picker" />';
     echo '<p class="description">' . __('رنگ دکمه فعال در شورت‌کد <code>[cpp_products_grid_view_no_date]</code>.', 'cpp-full') . '</p>';
+}
+
+function cpp_email_test_callback() {
+    echo '<button type="button" class="button button-secondary" id="cpp-test-email-btn">' . __('ارسال ایمیل تست', 'cpp-full') . '</button>';
+    echo '<p class="description">' . __('یک ایمیل آزمایشی به ایمیل مدیر (ذخیره شده در تنظیمات بالا) ارسال می‌کند تا از صحت عملکرد سیستم ایمیل وردپرس مطمئن شوید.', 'cpp-full') . '</p>';
+    echo '<textarea id="cpp-email-log" readonly style="width: 100%; height: 150px; margin-top: 10px; background-color: #f0f0f0; font-family: monospace; direction: ltr; text-align: left;"></textarea>';
 }
