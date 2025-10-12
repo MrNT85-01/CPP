@@ -21,11 +21,14 @@ class CPP_Full_Email {
         $values = array_values($placeholders);
 
         $final_subject = str_replace($keys, $values, $subject_template);
-        // استفاده از nl2br برای حفظ خطوط جدید در متن ایمیل HTML
-        $final_message = nl2br(str_replace($keys, $values, $body_template));
+        $final_message = str_replace($keys, $values, $body_template);
         
+        // اطمینان از اینکه ایمیل به صورت HTML ارسال می‌شود
         $headers = array('Content-Type: text/html; charset=UTF-8');
-        return wp_mail($admin_email, $final_subject, $final_message, $headers);
+        
+        // برای اینکه قالب‌های HTML که از ویرایشگر وردپرس می‌آیند درست کار کنند
+        // wpautop پاراگراف‌های خودکار اضافه می‌کند
+        return wp_mail($admin_email, $final_subject, wpautop($final_message), $headers);
     }
 }
 ?>
