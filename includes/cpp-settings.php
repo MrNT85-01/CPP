@@ -61,9 +61,15 @@ function cpp_admin_capability_callback() {
     $roles = get_editable_roles();
     $current_capability = get_option('cpp_admin_capability', 'manage_options');
     echo '<select name="cpp_admin_capability">';
-    foreach ($roles as $role => $details) {
-        $capability = isset($details['capabilities']['level_10']) ? 'manage_options' : (isset($details['capabilities']['edit_private_pages']) ? 'edit_private_pages' : 'edit_posts');
-        echo '<option value="' . esc_attr($capability) . '" ' . selected($current_capability, $capability, false) . '>' . esc_html($details['name']) . '</option>';
+    // افزودن نقش‌های اصلی وردپرس به صورت دستی برای اطمینان
+    $capabilities = [
+        'manage_options' => 'مدیرکل (Administrator)',
+        'edit_others_pages' => 'ویرایشگر (Editor)',
+        'publish_posts' => 'نویسنده (Author)',
+        'edit_posts' => 'مشارکت کننده (Contributor)'
+    ];
+    foreach ($capabilities as $cap => $name) {
+         echo '<option value="' . esc_attr($cap) . '" ' . selected($current_capability, $cap, false) . '>' . esc_html($name) . '</option>';
     }
     echo '</select>';
     echo '<p class="description">' . __('حداقل نقش کاربری که می‌تواند به منوهای مدیریت این افزونه دسترسی داشته باشد را انتخاب کنید.', 'cpp-full') . '</p>';
