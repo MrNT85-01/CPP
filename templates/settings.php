@@ -43,7 +43,11 @@
                 <tr valign="top">
                     <th scope="row"><?php _e('قالب ایمیل سفارش','cpp-full'); ?></th>
                     <td>
-                        <textarea name="cpp_email_body_template" id="cpp_email_body_template" rows="10" cols="50" class="large-text"><?php echo esc_textarea(get_option('cpp_email_body_template')); ?></textarea>
+                        <?php
+                            $content = get_option('cpp_email_body_template');
+                            $editor_id = 'cpp_email_body_template';
+                            wp_editor($content, $editor_id, ['textarea_name' => 'cpp_email_body_template', 'media_buttons' => false, 'textarea_rows' => 15]);
+                        ?>
                         <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
                         <button type="button" id="cpp-load-email-template" class="button" style="margin-top:10px;"><?php _e('بارگذاری قالب پیش‌فرض زیبا', 'cpp-full'); ?></button>
                     </td>
