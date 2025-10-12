@@ -2,14 +2,14 @@
 /**
  * Plugin Name: Custom Prices & Orders
  * Description: افزونه مستقل برای مدیریت بازه قیمت‌ها، دسته‌بندی محصولات و ثبت سفارش‌های درخواست شده (بدون ووکامرس). شامل شورت‌کدهای نمایش (کامل، براساس دسته، یا براساس آی‌دی‌ها)، پاپ‌آپ سفارش، صفحه تنظیمات و خروجی اکسل/CSV سفارشات.
- * Version: 2.9.1
+ * Version: 3.0.0
  * Author: Mr.NT
  */
 
 if (!defined('ABSPATH')) exit;
 
 global $wpdb;
-define('CPP_VERSION', '2.9.1');
+define('CPP_VERSION', '3.0.0');
 define('CPP_PATH', plugin_dir_path(__FILE__));
 define('CPP_URL', plugin_dir_url(__FILE__));
 define('CPP_TEMPLATES_DIR', CPP_PATH . 'templates/');
@@ -52,6 +52,10 @@ function cpp_activate() {
     }
     if (get_option('cpp_grid_no_date_show_image') === false) {
         update_option('cpp_grid_no_date_show_image', 1);
+    }
+    // تنظیمات پیش‌فرض برای دسترسی
+    if (get_option('cpp_admin_capability') === false) {
+        update_option('cpp_admin_capability', 'manage_options');
     }
 }
 
@@ -204,15 +208,17 @@ function cpp_load_more_products() {
 
     if ($products) {
         ob_start();
+        $default_image = get_option('cpp_default_product_image', CPP_ASSETS_URL . 'images/default-product.png');
         foreach ($products as $product) {
             $disable_base_price = get_option('cpp_disable_base_price', 0);
             $cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
             $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
+            $product_image_url = !empty($product->image_url) ? $product->image_url : $default_image;
             ?>
             <tr class="product-row" data-cat-id="<?php echo esc_attr($product->cat_id); ?>">
                 <td class="col-product-name">
                     <?php if ($show_image) : ?>
-                        <img src="<?php echo esc_url($product->image_url) ? esc_url($product->image_url) : CPP_ASSETS_URL . 'images/default-product.png'; ?>">
+                        <img src="<?php echo esc_url($product_image_url); ?>">
                     <?php endif; ?>
                     <span><?php echo esc_html($product->name); ?></span>
                 </td>
