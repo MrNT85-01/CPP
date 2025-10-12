@@ -5,6 +5,7 @@ $disable_base_price = get_option('cpp_disable_base_price', 0);
 $cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
 $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
 $show_image = get_option('cpp_grid_with_date_show_image', 1);
+$default_image = get_option('cpp_default_product_image', CPP_ASSETS_URL . 'images/default-product.png');
 ?>
 
 <div class="cpp-grid-view-wrapper with-date-shortcode">
@@ -25,19 +26,19 @@ $show_image = get_option('cpp_grid_with_date_show_image', 1);
                 <th><?php _e('واحد', 'cpp-full'); ?></th>
                 <th><?php _e('محل بارگیری', 'cpp-full'); ?></th>
                 <th><?php _e('آخرین بروزرسانی', 'cpp-full'); ?></th>
-                <?php if (!$disable_base_price) : ?>
-                    <th><?php _e('قیمت پایه', 'cpp-full'); ?></th>
-                <?php endif; ?>
+                <?php if (!$disable_base_price) : ?><th><?php _e('قیمت پایه', 'cpp-full'); ?></th><?php endif; ?>
                 <th><?php _e('بازه قیمت', 'cpp-full'); ?></th>
                 <th><?php _e('عملیات', 'cpp-full'); ?></th>
             </tr>
         </thead>
         <tbody>
-            <?php if (!empty($products)) : foreach ($products as $product) : ?>
+            <?php if (!empty($products)) : foreach ($products as $product) :
+                $product_image_url = !empty($product->image_url) ? $product->image_url : $default_image;
+            ?>
                 <tr class="product-row" data-cat-id="<?php echo esc_attr($product->cat_id); ?>">
                     <td class="col-product-name">
                         <?php if ($show_image) : ?>
-                            <img src="<?php echo esc_url($product->image_url) ? esc_url($product->image_url) : CPP_ASSETS_URL . 'images/default-product.png'; ?>">
+                            <img src="<?php echo esc_url($product_image_url); ?>">
                         <?php endif; ?>
                         <span><?php echo esc_html($product->name); ?></span>
                     </td>
@@ -65,11 +66,7 @@ $show_image = get_option('cpp_grid_with_date_show_image', 1);
                         <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>"><img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>"></button>
                     </td>
                 </tr>
-            <?php endforeach; else: ?>
-                <tr>
-                    <td colspan="<?php echo $disable_base_price ? '7' : '8'; ?>"><?php _e('محصولی برای نمایش یافت نشد.', 'cpp-full'); ?></td>
-                </tr>
-            <?php endif; ?>
+            <?php endforeach; endif; ?>
         </tbody>
     </table>
 
