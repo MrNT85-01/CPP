@@ -33,36 +33,51 @@ $default_image = get_option('cpp_default_product_image', CPP_ASSETS_URL . 'image
         </thead>
         <tbody>
             <?php if (!empty($products)) : foreach ($products as $product) :
-                $product_image_url = !empty($product->image_url) ? $product->image_url : $default_image;
+                $product_image_url = !empty($product->image_url) ? esc_url($product->image_url) : esc_url($default_image);
             ?>
                 <tr class="product-row" data-cat-id="<?php echo esc_attr($product->cat_id); ?>">
                     <td class="col-product-name">
                         <?php if ($show_image) : ?>
-                            <img src="<?php echo esc_url($product_image_url); ?>">
+                            <img src="<?php echo $product_image_url; ?>" alt="<?php echo esc_attr($product->name); ?>">
                         <?php endif; ?>
                         <span><?php echo esc_html($product->name); ?></span>
                     </td>
                     <td><?php echo esc_html($product->product_type); ?></td>
                     <td><?php echo esc_html($product->unit); ?></td>
                     <td><?php echo esc_html($product->load_location); ?></td>
-                    
+
                     <?php if (!$disable_base_price) : ?>
                     <td class="col-price">
-                        <?php echo esc_html(number_format_i18n((float)str_replace(',', '', $product->price))); ?>
+                        <?php
+                            $price_cleaned = str_replace(',', '', $product->price);
+                            echo is_numeric($price_cleaned) ? esc_html(number_format_i18n((float)$price_cleaned)) : esc_html($product->price);
+                        ?>
                     </td>
                     <?php endif; ?>
 
                      <td class="col-price-range">
-                        <?php if (!empty($product->min_price) && !empty($product->max_price)) : ?>
-                            <?php echo esc_html(number_format_i18n(str_replace(',', '', $product->min_price))); ?> - <?php echo esc_html(number_format_i18n(str_replace(',', '', $product->max_price))); ?>
+                        <?php if (!empty($product->min_price) && !empty($product->max_price)) :
+                             $min_cleaned = str_replace(',', '', $product->min_price);
+                             $max_cleaned = str_replace(',', '', $product->max_price);
+                        ?>
+                            <?php echo is_numeric($min_cleaned) ? esc_html(number_format_i18n((float)$min_cleaned)) : esc_html($product->min_price); ?> - <?php echo is_numeric($max_cleaned) ? esc_html(number_format_i18n((float)$max_cleaned)) : esc_html($product->max_price); ?>
                         <?php else: ?>
                             <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
                         <?php endif; ?>
                     </td>
 
                     <td class="col-actions">
-                        <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo esc_attr($product->id); ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('خرید', 'cpp-full'); ?>"><img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('خرید', 'cpp-full'); ?>"></button>
-                        <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php _e('نمودار', 'cpp-full'); ?>"><img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php _e('نمودار', 'cpp-full'); ?>"></button>
+                        <button class="cpp-icon-btn cpp-order-btn"
+                                data-product-id="<?php echo esc_attr($product->id); ?>"
+                                data-product-name="<?php echo esc_attr($product->name); ?>"
+                                data-product-unit="<?php echo esc_attr($product->unit); ?>"
+                                data-product-location="<?php echo esc_attr($product->load_location); ?>"
+                                title="<?php esc_attr_e('خرید', 'cpp-full'); ?>">
+                            <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php esc_attr_e('خرید', 'cpp-full'); ?>">
+                        </button>
+                        <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php esc_attr_e('نمودار', 'cpp-full'); ?>">
+                            <img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php esc_attr_e('نمودار', 'cpp-full'); ?>">
+                        </button>
                     </td>
                 </tr>
             <?php endforeach; endif; ?>
