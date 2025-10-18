@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 class CPP_Full_SMS {
     /**
-     * ارسال پیامک اعلان سفارش جدید به مدیر با جایگزینی متغیرها در قالب
+     * ارسال پیامک اعلان سفارش جدید به مدیر با جایگزینی متغیرها در الگو
      * @param array $placeholders شامل: {product_name}, {customer_name}, {phone}, {qty}, {note}
      */
     public static function send_notification($placeholders){
@@ -11,107 +11,90 @@ class CPP_Full_SMS {
         $apiKey     = get_option('cpp_sms_api_key');
         $sender     = get_option('cpp_sms_sender');
         $adminPhone = get_option('cpp_admin_phone');
-        
-        // بررسی می‌کنیم که سرویس حتما ippanel باشد و مقادیر خالی نباشند
-        if (!$service || !$apiKey || !$adminPhone || !$sender || $service !== 'ippanel') return false;
+        $pattern_code = get_option('cpp_sms_pattern_code');
 
-        $sms_text_template = get_option('cpp_sms_text_template', "سفارش جدید: {product_name} - {customer_name} - {phone}");
-
-        // --- جایگزینی متغیرها ---
-        $keys = array_keys($placeholders);
-        $values = array_values($placeholders);
-
-        $message_to_send = str_replace($keys, $values, $sms_text_template);
-        
-        // --- منطق ارسال پیامک ---
-        switch($service){
-            case 'melipayamak': return self::melipayamak_send($apiKey,$sender,$adminPhone,$message_to_send);
-            case 'kavenegar': return self::kavenegar_send($apiKey,$sender,$adminPhone,$message_to_send);
-            case 'ippanel': return self::ippanel_send($apiKey,$sender,$adminPhone,$message_to_send);
-            default: return false;
-        }
-    }
-    
-    // --- توابع کمکی ارسال پیامک (نمونه) ---
-    private static function melipayamak_send($apiKey,$sender,$to,$text){
-        // TODO: پیاده‌سازی اتصال به وب سرویس ملی پیامک
-        return true; 
-    }
-    private static function kavenegar_send($apiKey,$sender,$to,$text){
-        // TODO: پیاده‌سازی اتصال به وب سرویس کاوه نگار
-        return true; 
-    }
-
-    // --- شروع تغییر: پیاده‌سازی کامل تابع ippanel_send با cURL ---
-    private static function ippanel_send($apiKey, $sender, $to, $text){
-        
-        // ۱. اطلاعات مورد نیاز برای ارسال
-        // این آدرس از فایل Client.php در SDK استخراج شده است
-        $url = 'https://api2.ippanel.com/api/v1/sms/send/webservice/single';
-
-        // ۲. ساختار بدنه درخواست (JSON)
-        // این ساختار از متد send در Client.php استخراج شده است
-        $data = [
-            'sender' => $sender,
-            'recipient' => [$to], // گیرنده باید به صورت آرایه باشد
-            'message' => $text,
-            'description' => [
-                'summary' => 'CPP Order Notification',
-                'count_recipient' => '1'
-            ]
-        ];
-        $body = json_encode($data);
-
-        // ۳. ساخت هدرهای درخواست
-        $headers = [
-            'Content-Type: application/json',
-            'apikey: ' . $apiKey
-        ];
-
-        // ۴. ارسال درخواست با cURL
-        try {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-
-            $response = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curl_error = curl_error($ch);
-            curl_close($ch);
-
-            // ۵. بررسی خطا
-            if ($curl_error) {
-                error_log('CPP IPPanel cURL Error: ' . $curl_error);
-                return false;
-            }
-
-            // اگر ارسال موفقیت آمیز باشد (کدهای 200 یا 201)
-            if ($http_code == 200 || $http_code == 201) {
-                $result = json_decode($response);
-                // اگر شناسه پیامک وجود داشت، موفق بوده است
-                if (isset($result->data->message_id)) {
-                    return true;
-                } else {
-                    // خطای منطقی از سمت پنل
-                    error_log('CPP IPPanel API Logic Error: ' . $response);
-                    return false;
-                }
-            } else {
-                // خطای HTTP (مثل خطای 401 عدم دسترسی یا 422)
-                error_log('CPP IPPanel HTTP Error: Code ' . $http_code . ' | Response: ' . $response);
-                return false;
-            }
-
-        } catch (Exception $e) {
-            error_log('CPP IPPanel General Error: ' . $e->getMessage());
+        // بررسی می‌کنیم که سرویس IPPanel فعال باشد و همه مقادیر لازم پر شده باشند
+        if (!$service || $service !== 'ippanel' || !$apiKey || !$adminPhone || !$sender || !$pattern_code) {
             return false;
         }
+
+        // --- تبدیل متغیرهای افزونه ({key}) به متغیرهای الگو (key) ---
+        $variables = [];
+        foreach ($placeholders as $key => $value) {
+            $new_key = str_replace(['{', '}'], '', $key);
+            $variables[$new_key] = $value;
+        }
+
+        // --- فقط تابع ارسال الگوی IPPanel فراخوانی می‌شود ---
+        return self::ippanel_send_pattern($apiKey, $sender, $adminPhone, $pattern_code, $variables);
     }
-    // --- پایان تغییر ---
+
+    /**
+     * تابع ارسال پیامک با الگوی IPPanel با استفاده از wp_remote_post
+     * @param string $apiKey
+     * @param string $sender
+     * @param string $to
+     * @param string $pattern_code
+     * @param array $variables آرایه‌ای از متغیرهای الگو به شکل ['var_name' => 'value']
+     * @return bool True on success, False on failure
+     */
+    // --- تغییر: تابع عمومی شده تا برای مشتری هم استفاده شود ---
+    public static function ippanel_send_pattern($apiKey, $sender, $to, $pattern_code, $variables){
+
+        $url = 'https://api2.ippanel.com/api/v1/sms/pattern/normal/send';
+        $data = [
+            'code'      => $pattern_code,
+            'sender'    => $sender,
+            'recipient' => $to, // گیرنده باید فقط یک شماره باشد
+            'variable'  => $variables,
+        ];
+
+        // اطمینان از اینکه recipient آرایه نباشد و پاکسازی شماره
+        if (is_array($data['recipient'])) {
+             $data['recipient'] = $data['recipient'][0];
+        }
+        $data['recipient'] = preg_replace('/[^0-9+]/', '', $data['recipient']); // Keep only digits and +
+
+        $body = json_encode($data);
+        $headers = [
+            'Content-Type' => 'application/json',
+            'apikey'       => $apiKey
+        ];
+
+        $args = [
+            'body'        => $body,
+            'headers'     => $headers,
+            'method'      => 'POST',
+            'data_format' => 'body',
+            'timeout'     => 20,
+        ];
+
+        $response = wp_remote_post($url, $args);
+
+        if (is_wp_error($response)) {
+            $error_message = $response->get_error_message();
+            error_log('CPP IPPanel WP HTTP Error (Pattern Send to '.$to.'): ' . $error_message);
+            return false;
+        } else {
+            $http_code = wp_remote_retrieve_response_code($response);
+            $response_body = wp_remote_retrieve_body($response);
+
+            if ($http_code >= 200 && $http_code < 300) {
+                $result = json_decode($response_body);
+                // بررسی دقیق‌تر پاسخ موفق IPPanel
+                if ($result && isset($result->data->message_id)) {
+                    error_log('CPP IPPanel SMS Sent Successfully to '.$to.'. Message ID: '.$result->data->message_id); // Log success
+                    return true; // ارسال موفقیت آمیز بود
+                } else {
+                     $api_error = isset($result->status->message) ? $result->status->message : 'Unknown API Logic Error';
+                     error_log('CPP IPPanel API Logic Error (Pattern Send to '.$to.'): ' . $api_error . ' | Response: ' . $response_body);
+                     return false;
+                }
+            } else {
+                error_log('CPP IPPanel HTTP Error (Pattern Send to '.$to.'): Code ' . $http_code . ' | Response: ' . $response_body);
+                return false;
+            }
+        }
+    }
 }
 ?>
