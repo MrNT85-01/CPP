@@ -367,3 +367,95 @@ function cpp_ajax_test_email() {
         wp_send_json_error(['log' => $log]);
     }
 }
+
+// --- شروع تغییر: افزودن تابع AJAX برای تست پیامک ---
+add_action('wp_ajax_cpp_test_sms', 'cpp_ajax_test_sms');
+function cpp_ajax_test_sms() {
+    check_ajax_referer('cpp_admin_nonce', 'security');
+    
+    $capability = get_option('cpp_admin_capability', 'manage_options');
+    if (!current_user_can($capability)) {
+        wp_send_json_error(['log' => 'Error: You do not have permission.']);
+    }
+
+    $log = "--- Starting SMS Test ---\n";
+    $log .= "Time: " . current_time('mysql') . "\n";
+
+    // ۱. دریافت تنظیمات پیامک
+    $service    = get_option('cpp_sms_service');
+    $apiKey     = get_option('cpp_sms_api_key');
+    $sender     = get_option('cpp_sms_sender');
+    $adminPhone = get_option('cpp_admin_phone');
+
+    // ۲. اعتبارسنجی تنظیمات
+    if (empty($service) || $service !== 'ippanel') {
+        $log .= "Error: SMS Service is not enabled or not set to IPPanel.\n";
+        wp_send_json_error(['log' => $log]);
+    }
+    if (empty($apiKey)) {
+        $log .= "Error: IPPanel API Key is not set.\n";
+        wp_send_json_error(['log' => $log]);
+    }
+    if (empty($sender)) {
+        $log .= "Error: IPPanel Sender Number is not set.\n";
+        wp_send_json_error(['log' => $log]);
+    }
+    if (empty($adminPhone)) {
+        $log .= "Error: Admin Phone Number is not set.\n";
+        wp_send_json_error(['log' => $log]);
+    }
+
+    $log .= "Attempting to send a test SMS to: " . $adminPhone . "\n";
+    $log .= "From Sender: " . $sender . "\n";
+    
+    // ۳. ارسال پیامک تستی با cURL (کپی منطق از cpp-sms.php)
+    $url = 'https://api2.ippanel.com/api/v1/sms/send/webservice/single';
+    $test_message = "این یک پیامک آزمایشی از افزونه مدیریت قیمت (CPP) است.";
+    $data = [
+        'sender' => $sender,
+        'recipient' => [$adminPhone],
+        'message' => $test_message,
+        'description' => [ 'summary' => 'CPP Test SMS' ]
+    ];
+    $body = json_encode($data);
+    $headers = [ 'Content-Type: application/json', 'apikey: ' . $apiKey ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
+    curl_close($ch);
+
+    // ۴. بررسی نتیجه
+    if ($curl_error) {
+        $log .= "cURL Error: " . $curl_error . "\n";
+        wp_send_json_error(['log' => $log]);
+    }
+
+    if ($http_code == 200 || $http_code == 201) {
+        $result = json_decode($response);
+        if (isset($result->data->message_id)) {
+            $log .= "Success: SMS sent successfully!\n";
+            $log .= "Message ID: " . $result->data->message_id . "\n";
+            $log .= "Please check the inbox at " . $adminPhone . ".\n";
+            wp_send_json_success(['log' => $log]);
+        } else {
+            $log .= "API Error: SMS was not sent. Response from IPPanel:\n";
+            $log .= $response . "\n";
+            wp_send_json_error(['log' => $log]);
+        }
+    } else {
+        $log .= "HTTP Error: Failed to connect to IPPanel API.\n";
+        $log .= "Status Code: " . $http_code . "\n";
+        $log .= "Response: " . $response . "\n";
+        wp_send_json_error(['log' => $log]);
+    }
+}
+// --- پایان تغییر ---
+?>
