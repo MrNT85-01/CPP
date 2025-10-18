@@ -254,4 +254,33 @@ jQuery(document).ready(function ($) {
             button.prop('disabled', false).text('ارسال ایمیل تست');
         });
     });
+
+    // --- شروع تغییر: منطق تست ارسال پیامک ---
+    $('#cpp-test-sms-btn').on('click', function () {
+        var button = $(this);
+        var logBox = $('#cpp-sms-log');
+
+        button.prop('disabled', true).text('در حال ارسال...');
+        logBox.val('در حال آماده‌سازی برای ارسال پیامک آزمایشی...');
+
+        $.post(cpp_admin_vars.ajax_url, {
+            action: 'cpp_test_sms', // اکشن جدید
+            security: cpp_admin_vars.nonce
+        }, function (response) {
+            if (response.success) {
+                logBox.val(response.data.log);
+                logBox.css('color', 'green');
+            } else {
+                logBox.val(response.data.log);
+                logBox.css('color', 'red');
+            }
+            button.prop('disabled', false).text('ارسال پیامک تست');
+        }).fail(function () {
+            logBox.val('خطای شدید سرور (AJAX Error). ممکن است مشکل از سمت سرور یا تداخل افزونه‌ها باشد.');
+            logBox.css('color', 'red');
+            button.prop('disabled', false).text('ارسال پیامک تست');
+        });
+    });
+    // --- پایان تغییر ---
+
 });
