@@ -31,7 +31,8 @@
     height: 50px;
     object-fit: cover;
     border-radius: 5px;
-    margin-left: 10px;
+    margin-left: 10px; /* Use margin-left for RTL */
+    flex-shrink: 0; /* Prevent image from shrinking */
 }
 .cpp-product-name {
     font-weight: bold;
@@ -41,7 +42,7 @@
     white-space: nowrap;
 }
 
-/* --- شروع تغییر: استایل جدید برای دکمه‌های آیکونی --- */
+/* --- استایل دکمه‌های آیکونی --- */
 .cpp-icon-btn {
     background: none;
     border: none;
@@ -49,17 +50,18 @@
     padding: 5px;
     display: inline-block;
     vertical-align: middle;
+    line-height: 1; /* Ensure icon aligns nicely */
 }
 .cpp-icon-btn img {
-    width: 18px; /* سایز جدید و کوچک‌تر */
+    width: 18px;
     height: 18px;
     opacity: 0.7;
     transition: opacity 0.2s;
+    vertical-align: middle; /* Align icon vertically */
 }
 .cpp-icon-btn:hover img {
     opacity: 1;
 }
-/* --- پایان تغییر --- */
 
 
 /* --- استایل‌های پاپ آپ (Modal) --- */
@@ -70,21 +72,29 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; /* Use flex for centering */
+    align-items: center; /* Vertical center */
+    justify-content: center; /* Horizontal center */
     z-index: 10000;
     direction: rtl;
+    overflow-y: auto; /* Allow scrolling if content is too tall */
+    padding: 20px; /* Add padding for smaller screens */
+    box-sizing: border-box;
 }
 .cpp-modal-container {
     background-color: #fff;
     padding: 25px 30px;
     border-radius: 8px;
     width: 90%;
-    max-width: 500px;
+    /* --- شروع تغییر: افزایش عرض مودال --- */
+    max-width: 650px; /* Increased max-width */
+    /* --- پایان تغییر --- */
     position: relative;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    margin: auto; /* Ensure centered within flex container */
+    text-align: right; /* Ensure content aligns right */
 }
+/* Ensure chart container still works */
 .cpp-chart-container {
     max-width: 800px;
 }
@@ -93,16 +103,18 @@
     height: 400px;
     position: relative;
 }
+
 .cpp-modal-close {
     position: absolute;
     top: 10px;
-    left: 10px;
+    left: 10px; /* Adjusted for RTL, should be left */
     background: none;
     border: none;
     font-size: 28px;
     cursor: pointer;
     color: #aaa;
     line-height: 1;
+    padding: 5px; /* Easier to click */
 }
 .cpp-modal-close:hover {
     color: #333;
@@ -112,6 +124,7 @@
     margin-bottom: 20px;
     color: #333;
     font-weight: 600;
+    font-size: 1.3em;
 }
 .cpp-form-field {
     margin-bottom: 15px;
@@ -120,6 +133,7 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
+    font-size: 0.9em;
 }
 .cpp-form-field input[type="text"],
 .cpp-form-field input[type="tel"],
@@ -129,8 +143,15 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 1em;
 }
-.cpp-form-field button {
+/* Ensure LTR for phone input */
+.cpp-form-field input[type="tel"].ltr {
+    direction: ltr;
+    text-align: left;
+}
+
+.cpp-form-field button[type="submit"] { /* Target only submit button */
     width: 100%;
     padding: 12px;
     background-color: #28a745;
@@ -139,19 +160,61 @@
     border-radius: 4px;
     font-size: 16px;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
-.cpp-form-field button:hover {
+.cpp-form-field button[type="submit"]:hover {
     background-color: #218838;
+}
+.cpp-form-field button[type="submit"]:disabled {
+     background-color: #aaa;
+     cursor: not-allowed;
 }
 .cpp-form-field .required {
     color: #dc3545;
+    margin-right: 2px;
 }
 .cpp-form-message {
-    padding: 10px;
+    padding: 12px 15px;
     margin-bottom: 15px;
     border-radius: 4px;
     text-align: center;
+    border: 1px solid transparent;
 }
-.cpp-success { background-color: #d4edda; color: #155724; }
-.cpp-error { background-color: #f8d7da; color: #721c24; }
-.chart-error { text-align: center; padding: 20px; color: #721c24; }
+.cpp-success { background-color: #d4edda; color: #155724; border-color: #c3e6cb;}
+.cpp-error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb;}
+.chart-error, .chart-loading { text-align: center; padding: 20px; color: #721c24; }
+.chart-loading { color: #555; }
+
+/* Captcha specific styles moved from inline */
+.cpp-captcha-wrap { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.cpp-captcha-code {
+    background-color: #f0f0f0; padding: 8px 10px; border-radius: 4px;
+    font-weight: bold; font-size: 1.2em; letter-spacing: 4px; /* Reduced spacing */
+    font-family: monospace; border: 1px solid #ccc;
+    min-width: 70px; /* Reduced width */
+    text-align: center; user-select: none;
+    line-height: 1.5; /* Ensure height matches input */
+}
+.cpp-refresh-captcha {
+    background: none; border: none; font-size: 1.3em; /* Smaller */
+    cursor: pointer; color: #555; padding: 0 3px; /* Reduced padding */
+    line-height: 1;
+}
+.cpp-refresh-captcha:hover { color: #000; }
+#captcha_input {
+    width: 80px !important; /* Fixed smaller width */
+    flex-grow: 0;
+    text-align: center;
+    letter-spacing: 2px; /* Add spacing for input */
+    font-family: monospace;
+    font-size: 1.1em;
+    line-height: 1.5; /* Match captcha code height */
+}
+
+/* Modal Title Adjustments */
+.cpp-modal-product-location::before { content: " - "; font-weight: normal; font-size: 0.9em; color: #555;}
+.cpp-modal-product-location:empty::before { content: ""; }
+/* Modal Quantity Label Adjustments */
+.cpp-modal-product-unit::before { content: " ("; font-weight: normal; font-size: 0.9em; color: #555; }
+.cpp-modal-product-unit::after { content: ")"; font-weight: normal; font-size: 0.9em; color: #555;}
+.cpp-modal-product-unit:empty::before, .cpp-modal-product-unit:empty::after { content: ""; }
