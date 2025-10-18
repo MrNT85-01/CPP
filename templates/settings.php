@@ -90,7 +90,16 @@
                          <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
                     </td>
                 </tr>
-            </table>
+                
+                <tr valign="top">
+                    <th scope="row"><?php _e('تست ارسال پیامک', 'cpp-full'); ?></th>
+                    <td>
+                        <button type="button" class="button button-secondary" id="cpp-test-sms-btn"><?php _e('ارسال پیامک تست', 'cpp-full'); ?></button>
+                        <p class="description"><?php _e('یک پیامک آزمایشی به "شماره موبایل مدیر" ارسال می‌کند تا از صحت تنظیمات (API و شماره فرستنده) مطمئن شوید.', 'cpp-full'); ?></p>
+                        <textarea id="cpp-sms-log" readonly style="width: 100%; height: 100px; margin-top: 10px; background-color: #f0f0f0; font-family: monospace; direction: ltr; text-align: left;"></textarea>
+                    </td>
+                </tr>
+                </table>
             <?php
         }
         submit_button();
