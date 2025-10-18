@@ -18,15 +18,23 @@ function cpp_register_settings_and_fields() {
     register_setting('cpp_shortcode_settings_grp', 'cpp_grid_with_date_button_color');
     register_setting('cpp_shortcode_settings_grp', 'cpp_grid_no_date_button_color');
 
+    // تنظیمات اعلان ایمیل
     register_setting('cpp_notification_settings_grp', 'cpp_enable_email');
     register_setting('cpp_notification_settings_grp', 'cpp_admin_email');
     register_setting('cpp_notification_settings_grp', 'cpp_email_subject_template');
     register_setting('cpp_notification_settings_grp', 'cpp_email_body_template');
-    register_setting('cpp_notification_settings_grp', 'cpp_sms_service');
+
+    // تنظیمات اعلان پیامک مدیر (IPPanel Pattern)
+    register_setting('cpp_notification_settings_grp', 'cpp_sms_service'); // برای فعال/غیرفعال کردن
     register_setting('cpp_notification_settings_grp', 'cpp_sms_api_key');
     register_setting('cpp_notification_settings_grp', 'cpp_sms_sender');
     register_setting('cpp_notification_settings_grp', 'cpp_admin_phone');
-    register_setting('cpp_notification_settings_grp', 'cpp_sms_text_template');
+    register_setting('cpp_notification_settings_grp', 'cpp_sms_pattern_code');
+
+    // --- شروع تغییر: ثبت تنظیمات پیامک مشتری ---
+    register_setting('cpp_notification_settings_grp', 'cpp_sms_customer_enable');
+    register_setting('cpp_notification_settings_grp', 'cpp_sms_customer_pattern_code');
+    // --- پایان تغییر ---
 
     // === تعریف بخش‌ها (Sections) برای هر تب ===
     add_settings_section('cpp_general_section', null, null, 'cpp_general_settings_page');
@@ -52,6 +60,7 @@ function cpp_register_settings_and_fields() {
 
 
 // === توابع Callback برای نمایش HTML هر فیلد ===
+// ... (توابع callback دیگر بدون تغییر باقی می‌مانند) ...
 function cpp_disable_base_price_callback() {
     echo '<input type="checkbox" name="cpp_disable_base_price" value="1" ' . checked(1, get_option('cpp_disable_base_price'), false) . ' />';
     echo '<p class="description">' . __('با فعال کردن این گزینه، فیلد "قیمت پایه" در تمام بخش‌های افزونه مخفی می‌شود.', 'cpp-full') . '</p>';
@@ -66,7 +75,6 @@ function cpp_admin_capability_callback() {
     $roles = get_editable_roles();
     $current_capability = get_option('cpp_admin_capability', 'manage_options');
     echo '<select name="cpp_admin_capability">';
-    // افزودن نقش‌های اصلی وردپرس به صورت دستی برای اطمینان
     $capabilities = [
         'manage_options' => 'مدیرکل (Administrator)',
         'edit_others_pages' => 'ویرایشگر (Editor)',
@@ -115,6 +123,6 @@ function cpp_grid_no_date_button_color_callback() {
 
 function cpp_email_test_callback() {
     echo '<button type="button" class="button button-secondary" id="cpp-test-email-btn">' . __('ارسال ایمیل تست', 'cpp-full') . '</button>';
-    echo '<p class="description">' . __('یک ایمیل آزمایشی به ایمیل مدیر (ذخیره شده در تنظیمات بالا) ارسال می‌کند تا از صحت عملکرد سیستم ایمیل وردپرس مطمئن شوید.', 'cpp-full') . '</p>';
+    echo '<p class="description">' . __('یک ایمیل آزمایشی به ایمیل مدیر ارسال می‌کند.', 'cpp-full') . '</p>';
     echo '<textarea id="cpp-email-log" readonly style="width: 100%; height: 150px; margin-top: 10px; background-color: #f0f0f0; font-family: monospace; direction: ltr; text-align: left;"></textarea>';
 }
