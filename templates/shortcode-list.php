@@ -49,7 +49,12 @@ $chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
                     <?php endif; ?>
                 </td>
                 <td class="cpp-actions-cell">
-                    <button class="cpp-icon-btn cpp-order-btn" data-product-id="<?php echo $product->id; ?>" data-product-name="<?php echo esc_attr($product->name); ?>" title="<?php _e('ثبت سفارش', 'cpp-full'); ?>">
+                    <button class="cpp-icon-btn cpp-order-btn"
+                            data-product-id="<?php echo $product->id; ?>"
+                            data-product-name="<?php echo esc_attr($product->name); ?>"
+                            data-product-load-location="<?php echo esc_attr($product->load_location); // Added ?>"
+                            data-product-unit="<?php echo esc_attr($product->unit); // Added ?>"
+                            title="<?php _e('ثبت سفارش', 'cpp-full'); ?>">
                         <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php _e('ثبت سفارش', 'cpp-full'); ?>">
                     </button>
                     <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo $product->id; ?>" title="<?php _e('نمودار', 'cpp-full'); ?>">
