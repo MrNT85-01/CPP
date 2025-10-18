@@ -22,26 +22,26 @@
             ?>
             <h3><?php _e('تنظیمات ایمیل', 'cpp-full'); ?></h3>
             <table class="form-table">
-                <tr valign="top">
+                 <tr valign="top">
                     <th scope="row"><?php _e('فعال‌سازی ارسال ایمیل','cpp-full'); ?></th>
                     <td>
                         <input type="checkbox" name="cpp_enable_email" value="1" <?php checked(get_option('cpp_enable_email'), 1); ?> />
-                        <p class="description"><?php _e('ارسال ایمیل برای سفارشات جدید را فعال می‌کند.','cpp-full'); ?></p>
+                        <p class="description"><?php _e('ارسال ایمیل اعلان سفارش جدید به مدیر را فعال می‌کند.','cpp-full'); ?></p>
                     </td>
                 </tr>
                 <tr valign="top">
                     <th scope="row"><?php _e('ایمیل مدیر','cpp-full'); ?></th>
                     <td>
                         <input type="email" name="cpp_admin_email" value="<?php echo esc_attr(get_option('cpp_admin_email', get_option('admin_email'))); ?>" class="regular-text" />
-                        <p class="description"><?php _e('ایمیل گیرنده سفارشات. در صورت خالی بودن، از ایمیل مدیر سایت استفاده می‌شود.','cpp-full'); ?></p>
+                        <p class="description"><?php _e('ایمیل گیرنده اعلان‌های سفارش.','cpp-full'); ?></p>
                     </td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row"><?php _e('عنوان ایمیل سفارش','cpp-full'); ?></th>
+                    <th scope="row"><?php _e('عنوان ایمیل سفارش مدیر','cpp-full'); ?></th>
                     <td><input type="text" name="cpp_email_subject_template" value="<?php echo esc_attr(get_option('cpp_email_subject_template', 'سفارش جدید: {product_name}')); ?>" class="regular-text" /></td>
                 </tr>
                 <tr valign="top">
-                    <th scope="row"><?php _e('قالب ایمیل سفارش','cpp-full'); ?></th>
+                    <th scope="row"><?php _e('قالب ایمیل سفارش مدیر','cpp-full'); ?></th>
                     <td>
                         <?php
                             $content = get_option('cpp_email_body_template');
@@ -56,50 +56,83 @@
 
             <hr>
             <?php do_settings_sections('cpp_notification_settings_page'); // این بخش تست ایمیل را نمایش می‌دهد ?>
-            
+
             <hr>
-            <h3><?php _e('تنظیمات پیامک (SMS)','cpp-full'); ?></h3>
+            <h3><?php _e('تنظیمات پیامک (SMS) با IPPanel (الگو)','cpp-full'); ?></h3>
+            <p class="description" style="margin-bottom: 20px;">
+                <?php _e('برای ارسال پیامک به مدیر و مشتری، باید از روش "ارسال الگو" (Pattern) استفاده کنید.', 'cpp-full'); ?><br/>
+            </p>
             <table class="form-table">
                 <tr valign="top">
-                    <th scope="row"><?php _e('سرویس‌دهنده پیامک','cpp-full'); ?></th>
+                    <th scope="row"><?php _e('فعال‌سازی سرویس IPPanel','cpp-full'); ?></th>
                     <td>
-                        <select name="cpp_sms_service">
+                         <select name="cpp_sms_service">
                             <option value="" <?php selected(get_option('cpp_sms_service'), ''); ?>><?php _e('غیرفعال', 'cpp-full'); ?></option>
-                            <option value="melipayamak" <?php selected(get_option('cpp_sms_service'), 'melipayamak'); ?>>MeliPayamak</option>
-                            <option value="kavenegar" <?php selected(get_option('cpp_sms_service'), 'kavenegar'); ?>>Kavenegar</option>
-                            <option value="ippanel" <?php selected(get_option('cpp_sms_service'), 'ippanel'); ?>>IPPanel</option>
+                            <option value="ippanel" <?php selected(get_option('cpp_sms_service'), 'ippanel'); ?>>IPPanel (فعال)</option>
                         </select>
+                         <p class="description"><?php _e('برای فعال شدن ارسال پیامک، این گزینه را روی IPPanel قرار دهید.', 'cpp-full'); ?></p>
                     </td>
                 </tr>
                  <tr valign="top">
                     <th scope="row"><?php _e('کلید API','cpp-full'); ?></th>
-                    <td><input type="text" name="cpp_sms_api_key" value="<?php echo esc_attr( get_option('cpp_sms_api_key') ); ?>" class="regular-text"/></td>
+                    <td><input type="text" name="cpp_sms_api_key" value="<?php echo esc_attr( get_option('cpp_sms_api_key') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/></td>
                 </tr>
                 <tr valign="top">
                     <th scope="row"><?php _e('شماره فرستنده','cpp-full'); ?></th>
-                    <td><input type="text" name="cpp_sms_sender" value="<?php echo esc_attr( get_option('cpp_sms_sender') ); ?>" class="regular-text"/></td>
+                    <td><input type="text" name="cpp_sms_sender" value="<?php echo esc_attr( get_option('cpp_sms_sender') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/></td>
                 </tr>
-                 <tr valign="top">
-                    <th scope="row"><?php _e('شماره موبایل مدیر','cpp-full'); ?></th>
-                    <td><input type="text" name="cpp_admin_phone" value="<?php echo esc_attr( get_option('cpp_admin_phone') ); ?>" class="regular-text"/></td>
-                </tr>
+
+                <tr valign="top"> <td colspan="2"><hr><h4><?php _e('تنظیمات پیامک مدیر', 'cpp-full'); ?></h4></td> </tr>
+
                 <tr valign="top">
-                    <th scope="row"><?php _e('قالب متن پیامک','cpp-full'); ?></th>
+                    <th scope="row"><?php _e('کد الگوی مدیر','cpp-full'); ?></th>
                     <td>
-                        <textarea name="cpp_sms_text_template" rows="5" class="large-text"><?php echo esc_textarea( get_option('cpp_sms_text_template', "سفارش جدید:\nمحصول: {product_name}\nمشتری: {customer_name}\nتلفن: {phone}") ); ?></textarea>
-                         <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
+                        <input type="text" name="cpp_sms_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/>
+                        <p class="description">
+                            <?php _e('کد الگوی اعلان سفارش به مدیر را وارد کنید.','cpp-full'); ?><br/>
+                            <?php _e('الگو باید شامل متغیرهای زیر باشد:', 'cpp-full'); ?><br/>
+                            <code>product_name</code> , <code>customer_name</code> , <code>phone</code> , <code>qty</code> , <code>note</code>
+                        </p>
                     </td>
                 </tr>
-                
+
+                 <tr valign="top">
+                    <th scope="row"><?php _e('شماره موبایل مدیر','cpp-full'); ?></th>
+                    <td><input type="text" name="cpp_admin_phone" value="<?php echo esc_attr( get_option('cpp_admin_phone') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/>
+                         <p class="description"><?php _e('این شماره، گیرنده پیامک‌های اعلان سفارش و تست می‌باشد.', 'cpp-full'); ?></p>
+                    </td>
+                </tr>
+
                 <tr valign="top">
-                    <th scope="row"><?php _e('تست ارسال پیامک', 'cpp-full'); ?></th>
+                    <th scope="row"><?php _e('تست پیامک مدیر', 'cpp-full'); ?></th>
                     <td>
-                        <button type="button" class="button button-secondary" id="cpp-test-sms-btn"><?php _e('ارسال پیامک تست', 'cpp-full'); ?></button>
-                        <p class="description"><?php _e('یک پیامک آزمایشی به "شماره موبایل مدیر" ارسال می‌کند تا از صحت تنظیمات (API و شماره فرستنده) مطمئن شوید.', 'cpp-full'); ?></p>
+                        <button type="button" class="button button-secondary" id="cpp-test-sms-btn"><?php _e('ارسال پیامک تست به مدیر', 'cpp-full'); ?></button>
+                        <p class="description"><?php _e('یک پیامک آزمایشی با الگوی مدیر به شماره مدیر ارسال می‌کند.', 'cpp-full'); ?></p>
                         <textarea id="cpp-sms-log" readonly style="width: 100%; height: 100px; margin-top: 10px; background-color: #f0f0f0; font-family: monospace; direction: ltr; text-align: left;"></textarea>
                     </td>
                 </tr>
-                </table>
+
+                <tr valign="top"> <td colspan="2"><hr><h4><?php _e('تنظیمات پیامک مشتری', 'cpp-full'); ?></h4></td> </tr>
+
+                <tr valign="top">
+                    <th scope="row"><?php _e('فعال‌سازی پیامک مشتری','cpp-full'); ?></th>
+                    <td>
+                        <input type="checkbox" name="cpp_sms_customer_enable" value="1" <?php checked(get_option('cpp_sms_customer_enable'), 1); ?> />
+                        <p class="description"><?php _e('ارسال پیامک تایید ثبت سفارش به مشتری را فعال می‌کند.','cpp-full'); ?></p>
+                    </td>
+                </tr>
+                 <tr valign="top">
+                    <th scope="row"><?php _e('کد الگوی مشتری','cpp-full'); ?></th>
+                    <td>
+                        <input type="text" name="cpp_sms_customer_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_customer_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/>
+                        <p class="description">
+                            <?php _e('کد الگوی پیامک تایید سفارش برای مشتری را وارد کنید.','cpp-full'); ?><br/>
+                            <?php _e('پیشنهاد می‌شود الگو شامل متغیرهای زیر باشد:', 'cpp-full'); ?><br/>
+                             <code>customer_name</code> , <code>product_name</code>
+                        </p>
+                    </td>
+                </tr>
+            </table>
             <?php
         }
         submit_button();
