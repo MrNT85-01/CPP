@@ -48,7 +48,7 @@
                             $editor_id = 'cpp_email_body_template';
                             wp_editor(wp_kses_post($content), $editor_id, ['textarea_name' => 'cpp_email_body_template', 'media_buttons' => false, 'textarea_rows' => 15]);
                         ?>
-                        <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {customer_name}, {phone}, {qty}, {note}','cpp-full'); ?></p>
+                        <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {load_location}, {customer_name}, {phone}, {qty}, {unit}, {note}','cpp-full'); ?></p>
                         <button type="button" id="cpp-load-email-template" class="button" style="margin-top:10px;"><?php _e('بارگذاری قالب پیش‌فرض زیبا', 'cpp-full'); ?></button>
                     </td>
                 </tr>
@@ -59,8 +59,9 @@
 
             <hr>
             <h3><?php _e('تنظیمات پیامک (SMS) با IPPanel (الگو)','cpp-full'); ?></h3>
-            <p class="description" style="margin-bottom: 20px;">
-                <?php _e('برای ارسال پیامک به مدیر و مشتری، باید از روش "ارسال الگو" (Pattern) استفاده کنید.', 'cpp-full'); ?><br/>
+             <p class="description" style="margin-bottom: 20px;">
+                <?php _e('برای ارسال پیامک به مدیر و مشتری، باید از روش "ارسال الگو" (Pattern) در IPPanel استفاده کنید.', 'cpp-full'); ?><br/>
+                 <?php _e('لطفاً الگوهای مورد نیاز را در پنل IPPanel خود بسازید.', 'cpp-full'); ?>
             </p>
             <table class="form-table">
                 <tr valign="top">
@@ -90,8 +91,8 @@
                         <input type="text" name="cpp_sms_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/>
                         <p class="description">
                             <?php _e('کد الگوی اعلان سفارش به مدیر را وارد کنید.','cpp-full'); ?><br/>
-                            <?php _e('الگو باید شامل متغیرهای زیر باشد:', 'cpp-full'); ?><br/>
-                            <code>product_name</code> , <code>customer_name</code> , <code>phone</code> , <code>qty</code> , <code>note</code>
+                             <?php _e('متغیرهای قابل استفاده در الگو:', 'cpp-full'); ?><br/>
+                            <code>product_name</code> , <code>customer_name</code> , <code>phone</code> , <code>qty</code> , <code>unit</code> , <code>load_location</code> , <code>note</code>
                         </p>
                     </td>
                 </tr>
@@ -127,8 +128,8 @@
                         <input type="text" name="cpp_sms_customer_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_customer_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/>
                         <p class="description">
                             <?php _e('کد الگوی پیامک تایید سفارش برای مشتری را وارد کنید.','cpp-full'); ?><br/>
-                            <?php _e('پیشنهاد می‌شود الگو شامل متغیرهای زیر باشد:', 'cpp-full'); ?><br/>
-                             <code>customer_name</code> , <code>product_name</code>
+                             <?php _e('متغیرهای پیشنهادی برای الگو:', 'cpp-full'); ?><br/>
+                             <code>customer_name</code> , <code>product_name</code> , <code>unit</code> , <code>load_location</code> , <code>qty</code>
                         </p>
                     </td>
                 </tr>
@@ -153,8 +154,8 @@
                     <tbody>
                         <tr style="background-color: #f9f9f9;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 120px;">محصول:</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">{product_name}</td>
-                        </tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">{product_name} - {load_location}</td>
+                            </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">نام مشتری:</td>
                             <td style="padding: 10px; border: 1px solid #dddddd;">{customer_name}</td>
@@ -165,8 +166,8 @@
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">مقدار/تعداد:</td>
-                            <td style="padding: 10px; border: 1px solid #dddddd;">{qty}</td>
-                        </tr>
+                             <td style="padding: 10px; border: 1px solid #dddddd;">{qty} ({unit})</td>
+                             </tr>
                         <tr style="background-color: #f9f9f9;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">توضیحات:</td>
                             <td style="padding: 10px; border: 1px solid #dddddd;">{note}</td>
