@@ -1,19 +1,30 @@
-/* --- استایل‌های عمومی لیست محصولات --- */
+/* --- استایل‌های عمومی لیست محصولات (شورت کد list) --- */
 .cpp-products-list-container {
-    overflow-x: auto;
+    overflow-x: auto; /* Allow horizontal scroll on small screens */
+    -webkit-overflow-scrolling: touch; /* Smoother scrolling on iOS */
     font-family: sans-serif;
+    margin-bottom: 20px; /* Add some space below */
 }
 .cpp-products-table {
     width: 100%;
+    min-width: 700px; /* Minimum width before scroll appears */
     border-collapse: collapse;
     text-align: right;
     direction: rtl;
     border: 1px solid #eee;
+    font-size: 0.9em; /* Slightly smaller font for tables */
 }
 .cpp-products-table th, .cpp-products-table td {
-    padding: 12px 15px;
+    padding: 10px 12px; /* Adjusted padding */
     border-bottom: 1px solid #eee;
     vertical-align: middle;
+    white-space: nowrap; /* Prevent text wrapping initially */
+}
+/* Allow product name to wrap if needed */
+.cpp-products-table th:first-child,
+.cpp-products-table td:first-child {
+     white-space: normal;
+     min-width: 150px; /* Give product name some space */
 }
 .cpp-products-table th {
     background-color: #f8f8f8;
@@ -25,14 +36,13 @@
 .cpp-product-info {
     display: flex;
     align-items: center;
-    gap: 10px; /* Add gap between image and text */
+    gap: 10px;
 }
 .cpp-product-info img {
-    width: 50px;
-    height: 50px;
+    width: 40px; /* Slightly smaller image */
+    height: 40px;
     object-fit: cover;
-    border-radius: 5px;
-    /* margin-left: 10px; Removed, using gap now */
+    border-radius: 4px; /* Smaller radius */
     flex-shrink: 0;
 }
 .cpp-product-name {
@@ -41,200 +51,148 @@
 }
 .cpp-actions-cell {
     white-space: nowrap;
+    text-align: center; /* Center align action buttons */
 }
 
 /* --- استایل دکمه‌های آیکونی --- */
 .cpp-icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: inline-block;
-    vertical-align: middle;
-    line-height: 1;
+    background: none; border: none; cursor: pointer; padding: 5px;
+    display: inline-block; vertical-align: middle; line-height: 1;
 }
 .cpp-icon-btn img {
-    width: 18px;
-    height: 18px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    width: 18px; height: 18px; opacity: 0.7; transition: opacity 0.2s;
     vertical-align: middle;
 }
-.cpp-icon-btn:hover img {
-    opacity: 1;
-}
+.cpp-icon-btn:hover img { opacity: 1; }
 
 
 /* --- استایل‌های پاپ آپ (Modal) --- */
 .cpp-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.6);
-    display: none; /* Changed initial state to none, shown by JS */
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    direction: rtl;
-    overflow-y: auto;
-    padding: 20px;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.7); /* Darker overlay */
+    display: none; align-items: center; justify-content: center;
+    z-index: 10001; /* Higher z-index */
+    direction: rtl; overflow-y: auto; padding: 15px; /* Reduced padding */
     box-sizing: border-box;
 }
 .cpp-modal-container {
-    background-color: #fff;
-    padding: 25px 30px;
-    border-radius: 8px;
-    width: 90%;
-    /* --- عرض مودال افزایش یافت --- */
-    max-width: 650px;
-    position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    margin: auto;
-    text-align: right;
+    background-color: #fff; padding: 20px 25px; /* Adjusted padding */
+    border-radius: 8px; width: 95%; /* More width on small screens */
+    max-width: 600px; /* Adjusted max-width slightly */
+    position: relative; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    margin: auto; text-align: right; box-sizing: border-box;
 }
-.cpp-chart-container {
-    max-width: 800px;
-}
-.cpp-chart-inner {
-    width: 100%;
-    min-height: 350px; /* Ensure minimum height */
-    height: 40vh; /* Use viewport height */
-    position: relative;
-}
+.cpp-chart-container { max-width: 90%; width: 800px; } /* Chart modal can be wider */
+.cpp-chart-inner { width: 100%; min-height: 300px; height: 50vh; position: relative; }
 
 .cpp-modal-close {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: none;
-    border: none;
-    font-size: 28px;
-    cursor: pointer;
-    color: #aaa;
-    line-height: 1;
-    padding: 5px;
+    position: absolute; top: 8px; left: 8px; /* Closer to corner */
+    background: none; border: none; font-size: 26px; /* Slightly smaller */
+    cursor: pointer; color: #aaa; line-height: 1; padding: 5px;
 }
-.cpp-modal-close:hover {
-    color: #333;
-}
+.cpp-modal-close:hover { color: #333; }
 .cpp-modal-container h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #333;
-    font-weight: 600;
-    font-size: 1.3em;
-    line-height: 1.4; /* Ensure title doesn't break awkwardly */
+    margin-top: 0; margin-bottom: 20px; color: #333;
+    font-weight: 600; font-size: 1.2em; /* Adjusted size */
+    line-height: 1.4; border-bottom: 1px solid #eee; padding-bottom: 10px;
 }
-.cpp-form-field {
-    margin-bottom: 15px;
-}
+.cpp-form-field { margin-bottom: 15px; }
 .cpp-form-field label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    font-size: 0.9em;
+    display: block; margin-bottom: 5px; font-weight: 500;
+    font-size: 0.9em; color: #555; /* Slightly lighter label color */
 }
 .cpp-form-field input[type="text"],
 .cpp-form-field input[type="tel"],
 .cpp-form-field textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 1em;
+    width: 100%; padding: 10px 12px; /* Adjusted padding */
+    border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+    font-size: 1em; background-color: #fdfdfd; /* Lighter background */
 }
-.cpp-form-field input[type="tel"].ltr {
+.cpp-form-field input[type="tel"].ltr,
+.cpp-form-field input#captcha_input.ltr { /* Apply LTR to captcha input too */
     direction: ltr;
     text-align: left;
 }
+.cpp-form-field textarea { min-height: 60px; } /* Reduce textarea height */
 
 .cpp-form-field button[type="submit"] {
-    width: 100%;
-    padding: 12px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    width: 100%; padding: 12px; background-color: #28a745; color: white;
+    border: none; border-radius: 4px; font-size: 1em; /* Adjusted size */
+    cursor: pointer; transition: background-color 0.2s; font-weight: bold;
 }
-.cpp-form-field button[type="submit"]:hover {
-    background-color: #218838;
-}
-.cpp-form-field button[type="submit"]:disabled {
-     background-color: #aaa;
-     cursor: not-allowed;
-}
-.cpp-form-field .required {
-    color: #dc3545;
-    margin-right: 2px;
-}
-/* Placeholder for AJAX messages */
-.cpp-form-message-placeholder {
-    min-height: 20px; /* Reserve space */
-}
+.cpp-form-field button[type="submit"]:hover { background-color: #218838; }
+.cpp-form-field button[type="submit"]:disabled { background-color: #aaa; cursor: not-allowed; }
+.cpp-form-field .required { color: #dc3545; margin-right: 2px; }
+.cpp-form-message-placeholder { min-height: 20px; }
 .cpp-form-message {
-    padding: 12px 15px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    text-align: center;
-    border: 1px solid transparent;
+    padding: 10px 15px; /* Reduced padding */
+    margin-bottom: 15px; border-radius: 4px; text-align: center;
+    border: 1px solid transparent; font-size: 0.95em;
 }
 .cpp-success { background-color: #d4edda; color: #155724; border-color: #c3e6cb;}
 .cpp-error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb;}
 .chart-error, .chart-loading { text-align: center; padding: 20px; color: #721c24; }
 .chart-loading { color: #555; }
 
-/* --- شروع تغییر: تنظیم ظاهر کپچا --- */
+/* Captcha Layout */
 .cpp-captcha-wrap {
     display: flex;
-    align-items: center; /* Vertically align items */
-    gap: 8px; /* Space between elements */
-    flex-wrap: nowrap; /* Prevent wrapping to next line */
+    align-items: stretch; /* Make items same height */
+    gap: 5px; /* Smaller gap */
+    flex-wrap: nowrap;
 }
 .cpp-captcha-code {
-    background-color: #f0f0f0; padding: 8px 10px; border-radius: 4px;
-    font-weight: bold; font-size: 1.3em; /* Slightly larger */
-    letter-spacing: 5px; /* Increase spacing */
-    font-family: monospace, sans-serif; /* Add fallback font */
-    border: 1px solid #ccc;
-    min-width: 90px; /* Adjusted width */
-    text-align: center; user-select: none;
-    line-height: 1.5;
-    flex-shrink: 0; /* Don't shrink code display */
+    background-color: #f0f0f0; padding: 0 10px; /* Padding for height */
+    border-radius: 4px; font-weight: bold; font-size: 1.2em;
+    letter-spacing: 4px; font-family: monospace, sans-serif; border: 1px solid #ccc;
+    min-width: 80px; text-align: center; user-select: none;
+    line-height: calc(38px); /* Match input height (approx 10+10 padding + font) */
+    flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
 }
 .cpp-refresh-captcha {
-    background: none; border: none; font-size: 1.5em; /* Slightly larger */
-    cursor: pointer; color: #555; padding: 0 5px;
-    line-height: 1;
-    order: 2; /* Move refresh button after input */
-    margin-right: auto; /* Push input to the left if space allows (for LTR context maybe?) */
+    background: #eee; border: 1px solid #ccc; font-size: 1.2em; /* Smaller */
+    cursor: pointer; color: #555; padding: 0 8px; /* Padding for size */
+    line-height: 1; border-radius: 4px;
+    flex-shrink: 0; margin-right: auto; /* Push to right */
+    height: 38px; /* Match input height */
 }
-.cpp-refresh-captcha:hover { color: #000; }
+.cpp-refresh-captcha:hover { color: #000; background-color: #e0e0e0; }
 #captcha_input {
-    width: 100px !important; /* Fixed width */
-    flex-grow: 0; /* Don't grow */
-    flex-shrink: 0; /* Don't shrink */
-    text-align: center;
-    letter-spacing: 3px; /* Add spacing for input */
-    font-family: monospace, sans-serif;
-    font-size: 1.2em; /* Match code size */
-    line-height: 1.5; /* Match code height */
-    order: 1; /* Place input after code display */
-    box-sizing: border-box; /* Ensure padding is included in width */
+    width: 90px !important; /* Fixed width */
+    flex-grow: 0; flex-shrink: 0;
+    text-align: center; letter-spacing: 3px;
+    font-family: monospace, sans-serif; font-size: 1.1em;
+    padding: 8px 10px !important; /* Match height */
+    height: 38px; /* Explicit height */
+    box-sizing: border-box;
 }
-/* --- پایان تغییر --- */
-
 
 /* Modal Title Adjustments */
 .cpp-modal-product-name { font-weight: bold; }
-.cpp-modal-product-location::before { content: " - "; font-weight: normal; font-size: 0.9em; color: #555;}
+.cpp-modal-product-location::before { content: " \2013 "; /* En dash */ font-weight: normal; font-size: 0.9em; color: #555;}
 .cpp-modal-product-location:empty::before { content: ""; }
 /* Modal Quantity Label Adjustments */
 .cpp-modal-product-unit::before { content: " ("; font-weight: normal; font-size: 0.9em; color: #555; }
 .cpp-modal-product-unit::after { content: ")"; font-weight: normal; font-size: 0.9em; color: #555;}
 .cpp-modal-product-unit:empty::before, .cpp-modal-product-unit:empty::after { content: ""; }
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .cpp-modal-container { padding: 15px 20px; }
+    .cpp-modal-container h3 { font-size: 1.1em; }
+    .cpp-form-field input[type="text"],
+    .cpp-form-field input[type="tel"],
+    .cpp-form-field textarea,
+    .cpp-form-field button[type="submit"] { font-size: 0.95em; padding: 8px 10px; }
+    .cpp-captcha-wrap { gap: 5px; }
+    .cpp-captcha-code { font-size: 1.1em; min-width: 70px; padding: 0 8px; line-height: 36px; }
+    .cpp-refresh-captcha { font-size: 1.1em; padding: 0 6px; height: 36px; }
+    #captcha_input { width: 80px !important; font-size: 1em; padding: 7px 8px !important; height: 36px; }
+    .cpp-chart-inner { min-height: 250px; height: 40vh; }
+}
+@media (max-width: 480px) {
+    .cpp-captcha-wrap { flex-wrap: wrap; } /* Allow captcha to wrap on very small screens */
+    #captcha_input { order: 3; width: 100% !important; margin-top: 5px; } /* Full width input below */
+    .cpp-refresh-captcha { order: 2; margin-right: 0; } /* Refresh button next to code */
+    .cpp-captcha-code { order: 1; }
+}
