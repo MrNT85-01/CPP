@@ -66,10 +66,10 @@ $orders = $wpdb->get_results("SELECT * FROM " . CPP_DB_ORDERS . $where_clause . 
                     <td class="column-note" data-colname="<?php esc_attr_e('یادداشت مشتری', 'cpp-full'); ?>">
                         <?php
                         $full_note = esc_html($order->note);
-                        if (mb_strlen($full_note) > 40) {
+                        if (mb_strlen($full_note) > 40) { // Shorter truncation
                             echo '<span title="' . esc_attr($full_note) . '">' . esc_html(mb_substr($full_note, 0, 40)) . '...</span>';
                         } else {
-                            echo nl2br($full_note);
+                            echo nl2br($full_note); // Keep nl2br for shorter notes
                         }
                         ?>
                     </td>
@@ -79,7 +79,7 @@ $orders = $wpdb->get_results("SELECT * FROM " . CPP_DB_ORDERS . $where_clause . 
                      <td class="cpp-quick-edit column-admin_note" data-colname="<?php esc_attr_e('یادداشت مدیر', 'cpp-full'); ?>" data-id="<?php echo $order->id; ?>" data-field="admin_note" data-table-type="orders">
                         <?php
                         $full_admin_note = esc_html($order->admin_note);
-                        if (mb_strlen($full_admin_note) > 40) {
+                        if (mb_strlen($full_admin_note) > 40) { // Shorter truncation
                             echo '<span title="' . esc_attr($full_admin_note) . '">' . esc_html(mb_substr($full_admin_note, 0, 40)) . '...</span>';
                         } else {
                             echo nl2br($full_admin_note);
@@ -112,4 +112,5 @@ $orders = $wpdb->get_results("SELECT * FROM " . CPP_DB_ORDERS . $where_clause . 
                 </tr>
             </tfoot>
         </table>
-    </div> </div>
+    </div>
+</div>
