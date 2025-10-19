@@ -49,7 +49,6 @@ function cpp_activate() {
     if (get_option('cpp_sms_customer_enable') === false) update_option('cpp_sms_customer_enable', 0);
 }
 
-// ... (کدهای شورت‌کدها، enqueue اسکریپت‌ها، افزودن مودال و تابع load_more بدون تغییر) ...
 // شورت‌کد [cpp_products_list] برای نمایش جدولی ساده
 add_shortcode('cpp_products_list', 'cpp_products_list_shortcode');
 function cpp_products_list_shortcode($atts) {
@@ -160,7 +159,9 @@ add_action('wp_enqueue_scripts', 'cpp_front_assets');
 function cpp_front_assets() {
     global $post;
     $load_assets = false;
-    if (is_a($post, 'WP_Post')) {
+    // Check if the post object exists and has content
+    if (is_a($post, 'WP_Post') && !empty($post->post_content)) {
+         // Check for shortcodes in the content
          if (has_shortcode($post->post_content, 'cpp_products_list') ||
              has_shortcode($post->post_content, 'cpp_products_grid_view') ||
              has_shortcode($post->post_content, 'cpp_products_grid_view_no_date')) {
@@ -171,6 +172,9 @@ function cpp_front_assets() {
     if ( isset($_GET['elementor-preview']) && $_GET['elementor-preview'] ) {
        $load_assets = true;
     }
+     // Force load if needed for theme builders etc. (uncomment if necessary)
+     // $load_assets = apply_filters('cpp_force_load_front_assets', $load_assets);
+
 
     if ($load_assets) {
         wp_enqueue_style('cpp-front-css', CPP_ASSETS_URL . 'css/front.css', [], CPP_VERSION);
@@ -197,6 +201,7 @@ function cpp_front_assets() {
 // افزودن مودال‌ها و استایل‌های داینامیک به فوتر سایت
 add_action('wp_footer', 'cpp_add_modals_to_footer');
 function cpp_add_modals_to_footer() {
+    // Only add if assets were loaded
     if (wp_script_is('cpp-front-js', 'enqueued')) {
         $modals_template = CPP_TEMPLATES_DIR . 'modals-frontend.php';
         if (file_exists($modals_template)) { include $modals_template; }
@@ -205,18 +210,22 @@ function cpp_add_modals_to_footer() {
         $color_no_date = get_option('cpp_grid_no_date_button_color', '#0073aa');
 
         $custom_css = "
+            /* Active filter button colors */
             .cpp-grid-view-wrapper.with-date-shortcode .cpp-grid-view-filters .filter-btn.active {
                 background-color: " . esc_attr($color_with_date) . " !important;
                 border-color: " . esc_attr($color_with_date) . " !important;
-                color: #fff !important;
+                color: #fff !important; /* Ensure text is visible */
             }
             .cpp-grid-view-wrapper.no-date-shortcode .cpp-grid-view-filters .filter-btn.active {
                 background-color: " . esc_attr($color_no_date) . " !important;
                 border-color: " . esc_attr($color_no_date) . " !important;
-                color: #fff !important;
+                color: #fff !important; /* Ensure text is visible */
             }
         ";
-        echo '<style type="text/css">' . wp_strip_all_tags($custom_css) . '</style>';
+        // Use wp_add_inline_style for better practice if cpp-front-css is always enqueued when needed
+        // wp_add_inline_style('cpp-front-css', $custom_css);
+        // Or echo if cpp-front-css might not be enqueued but modals are
+         echo '<style type="text/css" id="cpp-dynamic-styles">' . wp_strip_all_tags($custom_css) . '</style>';
     }
 }
 
@@ -232,6 +241,7 @@ function cpp_load_more_products() {
     if ($page <= 1) $page = 1;
 
     $products_per_page = max(1, (int) get_option('cpp_products_per_page', 5));
+    // Offset is calculated based on previous pages (0-indexed)
     $offset = ($page - 1) * $products_per_page;
     $shortcode_type = isset($_POST['shortcode_type']) ? sanitize_key($_POST['shortcode_type']) : 'with_date';
 
@@ -318,13 +328,16 @@ function cpp_load_more_products() {
         }
         $html = ob_get_clean();
 
+        // Check if there might be more products on the next page more accurately
         $total_products = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
-        $current_total_shown = $page * $products_per_page;
+        $current_total_shown = $page * $products_per_page; // Total potentially shown up to this page
         $has_more = $current_total_shown < $total_products;
+
 
         wp_send_json_success(['html' => $html, 'has_more' => $has_more]);
 
     } else {
+        // No products found for this page means no more products
         wp_send_json_success(['html' => '', 'has_more' => false]);
     }
      wp_die();
