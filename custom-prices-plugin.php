@@ -1,16 +1,17 @@
 <?php
 /**
  * Plugin Name: Custom Prices & Orders
- * Description: افزونه مستقل برای مدیریت بازه قیمت‌ها، دسته‌بندی محصولات و ثبت سفارش‌های درخواست شده (بدون ووکامرس). شامل شورت‌کدهای نمایش (کامل، براساس دسته، یا براساس آی‌دی‌ها)، پاپ‌آپ سفارش، صفحه تنظیمات و خروجی اکسل/CSV سفارشات.
- * Version: 3.1.1
+ * Description: افزونه مستقل برای مدیریت بازه قیمت‌ها، دسته‌بندی محصولات و ثبت سفارش‌های درخواست شده (بدون ووکامرس). شامل شورت‌کدهای نمایش، پاپ‌آپ سفارش با کپچا، اعلان پیامکی (مدیر و مشتری) با الگوی IPPanel، صفحه تنظیمات و بهبودهای ریسپانسیو.
+ * Version: 3.2.0
  * Author: Mr.NT
  */
 
 if (!defined('ABSPATH')) exit;
 
 global $wpdb;
-// Update version number if needed
-define('CPP_VERSION', '3.1.1');
+// --- شروع تغییر: افزایش شماره نسخه ---
+define('CPP_VERSION', '3.2.0');
+// --- پایان تغییر ---
 define('CPP_PATH', plugin_dir_path(__FILE__));
 define('CPP_URL', plugin_dir_url(__FILE__));
 define('CPP_TEMPLATES_DIR', CPP_PATH . 'templates/');
@@ -32,10 +33,10 @@ if (file_exists(CPP_PATH . 'includes/cpp-sms.php')) require_once(CPP_PATH . 'inc
 register_activation_hook(__FILE__, 'cpp_activate');
 function cpp_activate() {
     CPP_Core::create_db_tables();
-    // تنظیمات پیش‌فرض برای ایمیل
+    // تنظیمات پیش‌فرض برای ایمیل (با متغیرهای جدید)
     if (get_option('cpp_email_subject_template') === false) {
         update_option('cpp_email_subject_template', 'سفارش جدید: {product_name}');
-        update_option('cpp_email_body_template', '<p style="direction:rtl; text-align:right;">سفارش جدیدی از طریق وب‌سایت ثبت شده است:<br><br><strong>محصول:</strong> {product_name}<br><strong>نام مشتری:</strong> {customer_name}<br><strong>شماره تماس:</strong> {phone}<br><strong>تعداد/مقدار:</strong> {qty}<br><strong>توضیحات مشتری:</strong> {note}<br></p>');
+        update_option('cpp_email_body_template', '<p style="direction:rtl; text-align:right;">سفارش جدیدی از طریق وب‌سایت ثبت شده است:<br><br><strong>محصول:</strong> {product_name} - {load_location}<br><strong>نام مشتری:</strong> {customer_name}<br><strong>شماره تماس:</strong> {phone}<br><strong>تعداد/مقدار:</strong> {qty} ({unit})<br><strong>توضیحات مشتری:</strong> {note}<br></p>');
     }
     // تنظیمات پیش‌فرض برای نمایش محصولات
     if (get_option('cpp_products_per_page') === false) {
@@ -62,6 +63,9 @@ function cpp_activate() {
      if (get_option('cpp_sms_service') === false) {
         update_option('cpp_sms_service', ''); // Default to disabled
     }
+     if (get_option('cpp_sms_customer_enable') === false) {
+        update_option('cpp_sms_customer_enable', 0); // Default to disabled
+    }
 }
 
 // شورت‌کد [cpp_products_list] برای نمایش جدولی ساده
@@ -75,8 +79,6 @@ function cpp_products_list_shortcode($atts) {
     if ($atts['status'] !== 'all') {
         $where_clauses[] = 'p.is_active = %d';
         $query_params[] = intval($atts['status']);
-    } else {
-         // If status is 'all', we don't add the is_active clause
     }
 
     if (!empty($atts['cat_id'])) {
@@ -97,19 +99,17 @@ function cpp_products_list_shortcode($atts) {
     }
 
     $where_sql = !empty($where_clauses) ? ' WHERE ' . implode(' AND ', $where_clauses) : '';
-    // Select necessary fields including unit and load_location
     $query = "SELECT p.id, p.name, p.product_type, p.unit, p.load_location, p.last_updated_at, p.price, p.min_price, p.max_price, p.image_url, c.name as category_name
               FROM " . CPP_DB_PRODUCTS . " p
               LEFT JOIN " . CPP_DB_CATEGORIES . " c ON p.cat_id = c.id
               {$where_sql}
-              ORDER BY p.id DESC"; // Consider adding option for different sorting
+              ORDER BY p.id DESC";
 
     if(!empty($query_params)){
         $products = $wpdb->get_results($wpdb->prepare($query, $query_params));
     } else {
         $products = $wpdb->get_results($query);
     }
-
 
     if (!$products) { return '<p class="cpp-no-products">' . __('محصولی برای نمایش یافت نشد.', 'cpp-full') . '</p>'; }
 
@@ -166,65 +166,64 @@ function cpp_products_grid_view_no_date_shortcode($atts) {
 // بارگذاری اسکریپت‌ها و استایل‌های بخش کاربری
 add_action('wp_enqueue_scripts', 'cpp_front_assets');
 function cpp_front_assets() {
-    wp_enqueue_style('cpp-front-css', CPP_ASSETS_URL . 'css/front.css', [], CPP_VERSION);
-    wp_enqueue_style('cpp-grid-view-css', CPP_ASSETS_URL . 'css/grid-view.css', [], CPP_VERSION);
+    // Enqueue styles only if a shortcode is present (more robust check)
+    global $post;
+    $load_assets = false;
+    if (is_a($post, 'WP_Post')) {
+         if (has_shortcode($post->post_content, 'cpp_products_list') ||
+             has_shortcode($post->post_content, 'cpp_products_grid_view') ||
+             has_shortcode($post->post_content, 'cpp_products_grid_view_no_date')) {
+             $load_assets = true;
+         }
+    }
+     // Maybe add checks for widgets or is_singular() etc. if needed
+     // For now, load if $load_assets is true.
 
-    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', [], null, true);
-    wp_enqueue_script('cpp-front-js', CPP_ASSETS_URL . 'js/front.js', ['jquery', 'chart-js'], CPP_VERSION, true);
+    if ($load_assets) {
+        wp_enqueue_style('cpp-front-css', CPP_ASSETS_URL . 'css/front.css', [], CPP_VERSION);
+        wp_enqueue_style('cpp-grid-view-css', CPP_ASSETS_URL . 'css/grid-view.css', [], CPP_VERSION);
 
-    wp_localize_script('cpp-front-js', 'cpp_front_vars', array(
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('cpp_front_nonce'), // Nonce for all front-end AJAX
-        'i18n' => [ // Internationalization strings for JS
-            'sending' => __('در حال ارسال...', 'cpp-full'),
-            'server_error' => __('خطای سرور، لطفا دوباره تلاش کنید.', 'cpp-full'),
-            'view_more' => __('مشاهده بیشتر', 'cpp-full'),
-            'loading' => __('در حال بارگذاری...', 'cpp-full'),
-            'no_more_products' => __('محصول دیگری برای نمایش وجود ندارد.', 'cpp-full'),
-        ]
-    ));
+        wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', [], null, true);
+        wp_enqueue_script('cpp-front-js', CPP_ASSETS_URL . 'js/front.js', ['jquery', 'chart-js'], CPP_VERSION, true);
+
+        wp_localize_script('cpp-front-js', 'cpp_front_vars', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('cpp_front_nonce'), // Nonce for all front-end AJAX
+            'i18n' => [ // Internationalization strings for JS
+                'sending' => __('در حال ارسال...', 'cpp-full'),
+                'server_error' => __('خطای سرور، لطفا دوباره تلاش کنید.', 'cpp-full'),
+                'view_more' => __('مشاهده بیشتر', 'cpp-full'),
+                'loading' => __('در حال بارگذاری...', 'cpp-full'),
+                'no_more_products' => __('محصول دیگری برای نمایش وجود ندارد.', 'cpp-full'),
+            ]
+        ));
+    }
 }
 
 
 // افزودن مودال‌ها و استایل‌های داینامیک به فوتر سایت
 add_action('wp_footer', 'cpp_add_modals_to_footer');
 function cpp_add_modals_to_footer() {
-    // Only add modals if a CPP shortcode is likely present (basic check)
-    global $post;
-    $load_modals = false;
-    if (is_a($post, 'WP_Post')) {
-         if (has_shortcode($post->post_content, 'cpp_products_list') ||
-             has_shortcode($post->post_content, 'cpp_products_grid_view') ||
-             has_shortcode($post->post_content, 'cpp_products_grid_view_no_date')) {
-             $load_modals = true;
-         }
-    }
-     // Maybe add checks for widgets or theme builders if shortcodes are used there
-     // For now, load if $load_modals is true or if it's a specific archive/page type maybe?
-     // Let's assume we load them if $load_modals is true for now.
-
-    if ($load_modals) {
+    // Check if assets were loaded (which implies shortcode is present)
+    if (wp_script_is('cpp-front-js', 'enqueued')) {
         $modals_template = CPP_TEMPLATES_DIR . 'modals-frontend.php';
         if (file_exists($modals_template)) { include $modals_template; }
-    }
 
+        $color_with_date = get_option('cpp_grid_with_date_button_color', '#ffc107');
+        $color_no_date = get_option('cpp_grid_no_date_button_color', '#0073aa');
 
-    $color_with_date = get_option('cpp_grid_with_date_button_color', '#ffc107');
-    $color_no_date = get_option('cpp_grid_no_date_button_color', '#0073aa');
-
-    // Only output colors if they are not the default, or always output? Let's always output for consistency.
-    $custom_css = "
-        .cpp-grid-view-wrapper.with-date-shortcode .cpp-grid-view-filters .filter-btn.active {
-            background-color: " . esc_attr($color_with_date) . " !important;
-            border-color: " . esc_attr($color_with_date) . " !important;
-        }
-        .cpp-grid-view-wrapper.no-date-shortcode .cpp-grid-view-filters .filter-btn.active {
-            background-color: " . esc_attr($color_no_date) . " !important;
-            border-color: " . esc_attr($color_no_date) . " !important;
-        }
-    ";
-    // Only output style if shortcodes were detected
-    if ($load_modals) {
+        $custom_css = "
+            .cpp-grid-view-wrapper.with-date-shortcode .cpp-grid-view-filters .filter-btn.active {
+                background-color: " . esc_attr($color_with_date) . " !important;
+                border-color: " . esc_attr($color_with_date) . " !important;
+                color: #fff !important; /* Ensure text is visible */
+            }
+            .cpp-grid-view-wrapper.no-date-shortcode .cpp-grid-view-filters .filter-btn.active {
+                background-color: " . esc_attr($color_no_date) . " !important;
+                border-color: " . esc_attr($color_no_date) . " !important;
+                color: #fff !important; /* Ensure text is visible */
+            }
+        ";
         echo '<style type="text/css">' . wp_strip_all_tags($custom_css) . '</style>';
     }
 }
@@ -237,11 +236,12 @@ function cpp_load_more_products() {
     check_ajax_referer('cpp_front_nonce', 'nonce');
     global $wpdb;
 
-    $page = isset($_POST['page']) ? intval($_POST['page']) : 1; // Page number starts from 1 for offset calculation
-    if ($page <= 0) $page = 1;
+    $page = isset($_POST['page']) ? intval($_POST['page']) : 1; // Page number starts from 1 sent by JS
+    if ($page <= 1) $page = 1; // Ensure page is at least 1
 
     $products_per_page = get_option('cpp_products_per_page', 5);
-    $offset = ($page - 1) * $products_per_page; // Correct offset calculation
+    // Offset is calculated based on previous pages (0-indexed)
+    $offset = ($page - 1) * $products_per_page;
     $shortcode_type = isset($_POST['shortcode_type']) ? sanitize_key($_POST['shortcode_type']) : 'with_date';
 
     if ($shortcode_type === 'with_date') {
@@ -251,9 +251,8 @@ function cpp_load_more_products() {
         $show_image = get_option('cpp_grid_no_date_show_image', 1);
         $show_date_column = false;
     }
-     $disable_base_price = get_option('cpp_disable_base_price', 0); // Check base price setting
+     $disable_base_price = get_option('cpp_disable_base_price', 0);
 
-    // Select necessary fields including unit and load_location
     $products = $wpdb->get_results($wpdb->prepare(
         "SELECT id, cat_id, name, product_type, unit, load_location, last_updated_at, price, min_price, max_price, image_url
          FROM " . CPP_DB_PRODUCTS . "
@@ -264,7 +263,7 @@ function cpp_load_more_products() {
     ));
 
     $html = '';
-    $has_more = false; // Flag to indicate if more products might exist
+    $has_more = false;
 
     if ($products) {
         ob_start();
@@ -287,7 +286,7 @@ function cpp_load_more_products() {
                 <td><?php echo esc_html($product->load_location); ?></td>
 
                 <?php if ($show_date_column): ?>
-                <td><?php echo esc_html(date_i18n('Y/m/d H:i', strtotime($product->last_updated_at))); ?></td>
+                <td><?php echo esc_html(date_i18n('Y/m/d H:i', strtotime(get_date_from_gmt($product->last_updated_at)))); ?></td>
                 <?php endif; ?>
 
                 <?php if (!$disable_base_price) : ?>
@@ -328,15 +327,17 @@ function cpp_load_more_products() {
         }
         $html = ob_get_clean();
 
-        // Check if there might be more products on the next page
+        // Check if there might be more products on the next page more accurately
         $total_products = $wpdb->get_var("SELECT COUNT(id) FROM " . CPP_DB_PRODUCTS . " WHERE is_active = 1");
-        $has_more = ($page * $products_per_page) < $total_products;
+        $current_total_shown = $page * $products_per_page; // Total potentially shown up to this page
+        $has_more = $current_total_shown < $total_products;
+
 
         wp_send_json_success(['html' => $html, 'has_more' => $has_more]);
 
     } else {
-        // No products found for this page
-        wp_send_json_success(['html' => '', 'has_more' => false]); // Send success but indicate no more
+        // No products found for this page means no more products
+        wp_send_json_success(['html' => '', 'has_more' => false]);
     }
      wp_die();
 }
