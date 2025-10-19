@@ -11,7 +11,7 @@ $default_image = get_option('cpp_default_product_image', CPP_ASSETS_URL . 'image
 <div class="cpp-grid-view-wrapper no-date-shortcode">
     <?php if (!empty($categories) || $last_updated_time) : ?>
         <div class="cpp-grid-view-filters">
-            <?php if ($last_updated_time): ?><span class="last-update-display"><?php echo __('آخرین بروزرسانی:', 'cpp-full') . ' ' . date_i18n('Y/m/d H:i', strtotime($last_updated_time)); ?></span><?php endif; ?>
+            <?php if ($last_updated_time): ?><span class="last-update-display"><?php echo __('آخرین بروزرسانی:', 'cpp-full') . ' ' . date_i18n('Y/m/d H:i', strtotime(get_date_from_gmt($last_updated_time))); // Convert GMT to local ?></span><?php endif; ?>
             <a href="#" class="filter-btn active" data-cat-id="all"><?php _e('همه دسته‌ها', 'cpp-full'); ?></a>
             <?php foreach ($categories as $cat) : ?>
                 <a href="#" class="filter-btn" data-cat-id="<?php echo esc_attr($cat->id); ?>"><?php echo esc_html($cat->name); ?></a>
