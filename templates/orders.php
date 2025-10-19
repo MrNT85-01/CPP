@@ -13,9 +13,8 @@ $search_term = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) :
 $where_clause = '';
 if (!empty($search_term)) {
     $like = '%' . $wpdb->esc_like($search_term) . '%';
-    // --- شروع تغییر: جستجو در فیلدهای جدید ---
-    $where_clause = $wpdb->prepare( " WHERE product_name LIKE %s OR customer_name LIKE %s OR phone LIKE %s OR qty LIKE %s OR unit LIKE %s OR load_location LIKE %s OR note LIKE %s OR admin_note LIKE %s", $like, $like, $like, $like, $like, $like, $like, $like );
-    // --- پایان تغییر ---
+    // Search in new fields as well
+    $where_clause = $wpdb->prepare( " WHERE product_name LIKE %s OR customer_name LIKE %s OR phone LIKE %s OR qty LIKE %s OR unit LIKE %s OR load_location LIKE %s OR note LIKE %s OR admin_note LIKE %s OR status LIKE %s OR id LIKE %s", $like, $like, $like, $like, $like, $like, $like, $like, $like, $like );
 }
 $orders = $wpdb->get_results("SELECT * FROM " . CPP_DB_ORDERS . $where_clause . " ORDER BY created DESC");
 ?>
@@ -29,9 +28,6 @@ $orders = $wpdb->get_results("SELECT * FROM " . CPP_DB_ORDERS . $where_clause . 
 
     <form method="get">
         <input type="hidden" name="page" value="<?php echo isset($_REQUEST['page']) ? esc_attr($_REQUEST['page']) : ''; ?>">
-        <?php
-        // Simple search box implementation
-        ?>
         <p class="search-box">
 	        <label class="screen-reader-text" for="cpp-orders-search-input"><?php _e('جستجوی سفارشات:', 'cpp-full'); ?></label>
 	        <input type="search" id="cpp-orders-search-input" name="s" value="<?php echo esc_attr($search_term); ?>">
@@ -44,43 +40,61 @@ $orders = $wpdb->get_results("SELECT * FROM " . CPP_DB_ORDERS . $where_clause . 
             <tr>
                 <th scope="col" class="manage-column column-id" style="width: 5%;"><?php _e('ID', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column"><?php _e('نام محصول', 'cpp-full'); ?></th>
-                 <th scope="col" class="manage-column"><?php _e('محل بارگیری', 'cpp-full'); ?></th>
+                <th scope="col" class="manage-column"><?php _e('محل بارگیری', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column"><?php _e('نام مشتری', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column"><?php _e('تلفن', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column"><?php _e('مقدار', 'cpp-full'); ?></th>
-                 <th scope="col" class="manage-column"><?php _e('واحد', 'cpp-full'); ?></th>
+                <th scope="col" class="manage-column"><?php _e('واحد', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column"><?php _e('یادداشت مشتری', 'cpp-full'); ?></th>
-                 <th scope="col" class="manage-column"><?php _e('وضعیت (دبل کلیک)', 'cpp-full'); ?></th>
+                <th scope="col" class="manage-column"><?php _e('وضعیت (دبل کلیک)', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column"><?php _e('یادداشت مدیر (دبل کلیک)', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column column-date"><?php _e('تاریخ ثبت', 'cpp-full'); ?></th>
                 <th scope="col" class="manage-column column-actions"><?php _e('عملیات', 'cpp-full'); ?></th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="the-list">
         <?php if ($orders) : foreach ($orders as $order) : ?>
-            <tr>
+            <tr id="order-<?php echo $order->id; ?>">
                 <td><?php echo $order->id; ?></td>
                 <td><?php echo esc_html($order->product_name); ?></td>
                 <td><?php echo esc_html($order->load_location); ?></td>
                 <td><?php echo esc_html($order->customer_name); ?></td>
                 <td><?php echo esc_html($order->phone); ?></td>
                 <td><?php echo esc_html($order->qty); ?></td>
-                 <td><?php echo esc_html($order->unit); ?></td>
-                <td><?php echo esc_html(nl2br($order->note)); // Display customer note ?></td>
-                 <td class="cpp-quick-edit-select" data-id="<?php echo $order->id; ?>" data-field="status" data-table-type="orders" data-current="<?php echo esc_attr($order->status); ?>">
+                <td><?php echo esc_html($order->unit); ?></td>
+                <td class="column-note">
+                    <?php
+                    // Display truncated note with ellipsis and full note on hover/tooltip
+                    $full_note = esc_html($order->note);
+                    if (mb_strlen($full_note) > 50) {
+                        echo '<span title="' . esc_attr($full_note) . '">' . esc_html(mb_substr($full_note, 0, 50)) . '...</span>';
+                    } else {
+                        echo $full_note;
+                    }
+                    ?>
+                </td>
+                <td class="cpp-quick-edit-select column-status" data-id="<?php echo $order->id; ?>" data-field="status" data-table-type="orders" data-current="<?php echo esc_attr($order->status); ?>">
                     <?php echo isset($order_statuses[$order->status]) ? $order_statuses[$order->status] : esc_html($order->status); ?>
                 </td>
-                <td class="cpp-quick-edit" data-id="<?php echo $order->id; ?>" data-field="admin_note" data-table-type="orders">
-                    <?php echo wp_kses_post(nl2br($order->admin_note)); // Use wp_kses_post for admin note ?>
-                </td>
-                <td><?php echo date_i18n('Y/m/d H:i:s', strtotime(get_date_from_gmt($order->created))); // Convert GMT to local time ?></td>
+                 <td class="cpp-quick-edit column-admin_note" data-id="<?php echo $order->id; ?>" data-field="admin_note" data-table-type="orders">
+                    <?php
+                    // Display truncated note with ellipsis and full note on hover/tooltip
+                    $full_admin_note = esc_html($order->admin_note);
+                    if (mb_strlen($full_admin_note) > 50) {
+                        echo '<span title="' . esc_attr($full_admin_note) . '">' . esc_html(mb_substr($full_admin_note, 0, 50)) . '...</span>';
+                    } else {
+                        echo nl2br($full_admin_note); // Keep nl2br for display if not truncated
+                    }
+                    ?>
+                 </td>
+                <td><?php echo date_i18n('Y/m/d H:i', strtotime(get_date_from_gmt($order->created))); // Convert GMT to local time ?></td>
                 <td>
-                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=custom-prices-orders&action=delete&id=' . $order->id), 'cpp_delete_order_' . $order->id); ?>" class="button button-small" onclick="return confirm('<?php esc_attr_e('آیا مطمئنید؟', 'cpp-full'); ?>')"><?php _e('حذف', 'cpp-full'); ?></a>
+                    <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=custom-prices-orders&action=delete&id=' . $order->id), 'cpp_delete_order_' . $order->id); ?>" class="button button-link-delete" onclick="return confirm('<?php esc_attr_e('آیا مطمئنید؟', 'cpp-full'); ?>')"><?php _e('حذف', 'cpp-full'); ?></a>
                 </td>
             </tr>
         <?php endforeach; else: ?>
-             <tr><td colspan="12"><?php _e('سفارشی یافت نشد.', 'cpp-full'); ?></td></tr>
-             <?php endif; ?>
+            <tr><td colspan="12"><?php _e('سفارشی یافت نشد.', 'cpp-full'); ?></td></tr>
+        <?php endif; ?>
         </tbody>
          <tfoot>
             <tr>
@@ -100,3 +114,11 @@ $orders = $wpdb->get_results("SELECT * FROM " . CPP_DB_ORDERS . $where_clause . 
         </tfoot>
     </table>
 </div>
+<style>
+/* Add some basic styling for truncated notes */
+.column-note span[title],
+.column-admin_note span[title] {
+    cursor: help;
+    border-bottom: 1px dotted #999;
+}
+</style>
