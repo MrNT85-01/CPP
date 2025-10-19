@@ -41,7 +41,7 @@ $default_image = get_option('cpp_default_product_image', CPP_ASSETS_URL . 'image
                 <td><?php echo esc_html($product->product_type); ?></td>
                 <td><?php echo esc_html($product->unit); ?></td>
                 <td><?php echo esc_html($product->load_location); ?></td>
-                <td><?php echo date_i18n('Y/m/d H:i', strtotime($product->last_updated_at)); ?></td>
+                <td><?php echo date_i18n('Y/m/d H:i', strtotime(get_date_from_gmt($product->last_updated_at))); // Convert GMT to local time ?></td>
                 <?php if (!$disable_base_price) : ?>
                     <td class="cpp-base-price">
                          <?php
