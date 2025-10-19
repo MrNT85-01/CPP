@@ -1,125 +1,116 @@
 /* Styles for Grid View Shortcode */
 .cpp-grid-view-wrapper {
-    direction: rtl;
-    font-family: sans-serif;
-    background-color: #f9f9f9;
-    padding: 25px;
-    border-radius: 15px;
+    direction: rtl; font-family: sans-serif;
+    background-color: #f9f9f9; padding: 20px; /* Reduced padding */
+    border-radius: 10px; /* Smaller radius */
     border: 1px solid #eee;
+    overflow-x: auto; /* Allow horizontal scroll */
+     -webkit-overflow-scrolling: touch;
 }
 
 /* Filter Buttons */
 .cpp-grid-view-filters {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 25px;
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 8px; /* Smaller gap */
+    margin-bottom: 20px;
 }
 .cpp-grid-view-filters .filter-btn,
 .cpp-grid-view-filters .last-update-display {
-    text-decoration: none;
-    padding: 10px 25px;
-    border-radius: 20px;
-    background-color: #fff;
-    color: #555;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease-in-out;
+    text-decoration: none; padding: 8px 18px; /* Reduced padding */
+    border-radius: 18px; background-color: #fff; color: #555;
+    border: 1px solid #ddd; cursor: pointer; font-size: 0.85em; /* Smaller font */
+    transition: all 0.2s ease-in-out; white-space: nowrap;
 }
 .cpp-grid-view-filters .last-update-display {
-    cursor: default;
-    background-color: #f0f0f0;
+    cursor: default; background-color: #f0f0f0;
 }
-
-.cpp-grid-view-filters .filter-btn:hover {
-    background-color: #f0f0f0;
-    border-color: #ccc;
-}
-
-.cpp-grid-view-filters .filter-btn.active {
-    color: #333;
-    font-weight: bold;
-}
+.cpp-grid-view-filters .filter-btn:hover { background-color: #f0f0f0; border-color: #ccc; }
+.cpp-grid-view-filters .filter-btn.active { color: #333; font-weight: bold; }
 
 /* Table Styles */
 .cpp-grid-view-table {
     width: 100%;
+    min-width: 800px; /* Minimum width before scroll */
     border-collapse: collapse;
-    text-align: center;
+    text-align: center; /* Default center align */
+    font-size: 0.9em; /* Smaller font */
 }
 .cpp-grid-view-table th,
 .cpp-grid-view-table td {
-    padding: 15px 10px;
+    padding: 12px 8px; /* Adjusted padding */
     vertical-align: middle;
-    border-bottom: 1px solid #eee; /* تضمین خط زیرین برای همه سلول‌ها */
+    border-bottom: 1px solid #eee;
+    white-space: nowrap; /* Prevent wrapping by default */
 }
 .cpp-grid-view-table thead th {
-    color: #888;
-    font-weight: normal;
-    font-size: 13px;
+    color: #888; font-weight: normal; font-size: 0.9em; /* Smaller header font */
+    text-align: center; /* Ensure headers are centered */
 }
-.cpp-grid-view-table tbody tr.product-row:last-child td {
-    border-bottom: none; /* حذف خط زیرین برای آخرین ردیف */
-}
+.cpp-grid-view-table tbody tr.product-row:last-child td { border-bottom: none; }
 
-/* استایل برای ستون نام محصول (حاوی تصویر و متن) */
+/* Product Name Column */
 .cpp-grid-view-table .col-product-name {
-    font-weight: bold;
-    color: #333;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-align: right;
+    font-weight: bold; color: #333;
+    display: flex; align-items: center; gap: 10px;
+    text-align: right; /* Align text right within the flex container */
+    white-space: normal; /* Allow product name to wrap */
+    min-width: 180px; /* Ensure space for image and text */
 }
 .cpp-grid-view-table .col-product-name img {
-    width: 50px;
-    height: 50px;
-    object-fit: contain; /* تغییر از cover به contain برای نمایش کامل تصویر */
-    border-radius: 5px;
-    flex-shrink: 0;
-    background-color: #fff; /* پس‌زمینه سفید برای تصاویری که فضای خالی دارند */
+    width: 40px; height: 40px; object-fit: contain;
+    border-radius: 4px; flex-shrink: 0; background-color: #fff;
     border: 1px solid #eee;
 }
 
+/* Price Columns */
 .cpp-grid-view-table .col-price,
 .cpp-grid-view-table .col-price-range {
-    font-weight: bold;
-    color: #0056b3;
-    font-size: 16px;
+    font-weight: bold; color: #0056b3; font-size: 1.05em;
+    min-width: 100px; /* Give price columns some minimum width */
 }
+.cpp-grid-view-table .col-price-range .cpp-price-not-set {
+    font-weight: normal; font-size: 0.9em; color: #777;
+}
+
+/* Actions Column */
 .cpp-grid-view-table .col-actions {
     white-space: nowrap;
+    text-align: center; /* Center buttons */
+    min-width: 80px;
 }
-
 .cpp-grid-view-table .col-actions .cpp-icon-btn img {
-    width: 18px;
-    height: 18px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    width: 18px; height: 18px; opacity: 0.7; transition: opacity 0.2s;
 }
-.cpp-grid-view-table .col-actions .cpp-icon-btn:hover img {
-    opacity: 1;
-}
+.cpp-grid-view-table .col-actions .cpp-icon-btn:hover img { opacity: 1; }
 
 /* View More Button */
-.cpp-grid-view-footer {
-    text-align: center;
-    margin-top: 25px;
-}
+.cpp-grid-view-footer { text-align: center; margin-top: 20px; }
 .cpp-view-more-btn {
-    text-decoration: none;
-    padding: 12px 30px;
-    border-radius: 25px;
-    background-color: #fff;
-    color: #555;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    font-size: 14px;
+    text-decoration: none; padding: 10px 25px; /* Adjusted padding */
+    border-radius: 20px; background-color: #fff; color: #555;
+    border: 1px solid #ddd; cursor: pointer; font-size: 0.9em; /* Smaller font */
     transition: all 0.2s ease-in-out;
 }
-.cpp-view-more-btn:hover {
-    background-color: #f0f0f0;
-    border-color: #ccc;
+.cpp-view-more-btn:hover { background-color: #f0f0f0; border-color: #ccc; }
+.cpp-view-more-btn:disabled { background-color: #f9f9f9; color: #aaa; cursor: default; border-color: #eee;}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cpp-grid-view-wrapper { padding: 15px; }
+    .cpp-grid-view-table { font-size: 0.85em; min-width: 600px; } /* Further reduce font, adjust min-width */
+    .cpp-grid-view-table th, .cpp-grid-view-table td { padding: 10px 6px; }
+    .cpp-grid-view-table .col-product-name img { width: 35px; height: 35px; }
+    .cpp-grid-view-table .col-price, .cpp-grid-view-table .col-price-range { font-size: 1em; }
+    .cpp-grid-view-table .col-actions .cpp-icon-btn img { width: 16px; height: 16px; }
+}
+@media (max-width: 480px) {
+     /* On very small screens, maybe hide less important columns or force stacking */
+     /* Hiding columns example: */
+     .cpp-grid-view-table th:nth-child(2), /* Hide 'Type' */
+     .cpp-grid-view-table td:nth-child(2) {
+         /* display: none; */ /* Uncomment to hide */
+     }
+      /* Reduce padding even more */
+     .cpp-grid-view-table th, .cpp-grid-view-table td { padding: 8px 4px; }
+     .cpp-grid-view-table .col-product-name { min-width: 120px; }
 }
