@@ -44,11 +44,11 @@
                     <th scope="row"><?php _e('قالب ایمیل سفارش مدیر','cpp-full'); ?></th>
                     <td>
                         <?php
-                            $content = get_option('cpp_email_body_template');
+                            $content = get_option('cpp_email_body_template', '<p style="direction:rtl; text-align:right;">سفارش جدیدی از طریق وب‌سایت ثبت شده است:<br><br><strong>محصول:</strong> {product_name} - {load_location}<br><strong>نام مشتری:</strong> {customer_name}<br><strong>شماره تماس:</strong> {phone}<br><strong>تعداد/مقدار:</strong> {qty} ({unit})<br><strong>توضیحات مشتری:</strong> {note}<br></p>'); // Updated default
                             $editor_id = 'cpp_email_body_template';
                             wp_editor(wp_kses_post($content), $editor_id, ['textarea_name' => 'cpp_email_body_template', 'media_buttons' => false, 'textarea_rows' => 15]);
                         ?>
-                        <p class="description"><?php _e('متغیرهای مجاز: {product_name}, {load_location}, {customer_name}, {phone}, {qty}, {unit}, {note}','cpp-full'); ?></p>
+                        <p class="description"><strong><?php _e('متغیرهای مجاز:', 'cpp-full'); ?></strong> <code>{product_name}</code>, <code>{load_location}</code>, <code>{customer_name}</code>, <code>{phone}</code>, <code>{qty}</code>, <code>{unit}</code>, <code>{note}</code></p>
                         <button type="button" id="cpp-load-email-template" class="button" style="margin-top:10px;"><?php _e('بارگذاری قالب پیش‌فرض زیبا', 'cpp-full'); ?></button>
                     </td>
                 </tr>
@@ -88,14 +88,21 @@
                 <tr valign="top">
                     <th scope="row"><?php _e('کد الگوی مدیر','cpp-full'); ?></th>
                     <td>
-                        <input type="text" name="cpp_sms_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/>
-                        <p class="description">
-                            <?php _e('کد الگوی اعلان سفارش به مدیر را وارد کنید.','cpp-full'); ?><br/>
-                             <?php _e('متغیرهای قابل استفاده در الگو:', 'cpp-full'); ?><br/>
-                            <code>product_name</code> , <code>customer_name</code> , <code>phone</code> , <code>qty</code> , <code>unit</code> , <code>load_location</code> , <code>note</code>
-                        </p>
+                        <input type="text" name="cpp_sms_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left; width: 200px; display: inline-block; vertical-align: middle;"/>
+                        <div style="display: inline-block; vertical-align: middle; margin-right: 15px; padding: 10px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;">
+                            <strong><?php _e('متغیرهای الگو:', 'cpp-full'); ?></strong><br>
+                            <code>product_name</code><br>
+                            <code>customer_name</code><br>
+                            <code>phone</code><br>
+                            <code>qty</code><br>
+                            <code>unit</code><br>
+                            <code>load_location</code><br>
+                            <code>note</code>
+                        </div>
+                         <p class="description clear" style="clear: both; padding-top: 5px;"><?php _e('کد الگوی اعلان سفارش به مدیر را وارد کنید. الگو باید شامل متغیرهای مورد نیاز شما از لیست بالا باشد.','cpp-full'); ?></p>
                     </td>
                 </tr>
+
 
                  <tr valign="top">
                     <th scope="row"><?php _e('شماره موبایل مدیر','cpp-full'); ?></th>
@@ -125,11 +132,17 @@
                  <tr valign="top">
                     <th scope="row"><?php _e('کد الگوی مشتری','cpp-full'); ?></th>
                     <td>
-                        <input type="text" name="cpp_sms_customer_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_customer_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left;"/>
-                        <p class="description">
+                        <input type="text" name="cpp_sms_customer_pattern_code" value="<?php echo esc_attr( get_option('cpp_sms_customer_pattern_code') ); ?>" class="regular-text ltr" style="direction: ltr; text-align: left; width: 200px; display: inline-block; vertical-align: middle;"/>
+                         <div style="display: inline-block; vertical-align: middle; margin-right: 15px; padding: 10px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;">
+                             <strong><?php _e('متغیرهای پیشنهادی:', 'cpp-full'); ?></strong><br>
+                            <code>customer_name</code><br>
+                            <code>product_name</code><br>
+                            <code>qty</code><br>
+                            <code>unit</code><br>
+                            <code>load_location</code><br>
+                         </div>
+                        <p class="description clear" style="clear: both; padding-top: 5px;">
                             <?php _e('کد الگوی پیامک تایید سفارش برای مشتری را وارد کنید.','cpp-full'); ?><br/>
-                             <?php _e('متغیرهای پیشنهادی برای الگو:', 'cpp-full'); ?><br/>
-                             <code>customer_name</code> , <code>product_name</code> , <code>unit</code> , <code>load_location</code> , <code>qty</code>
                         </p>
                     </td>
                 </tr>
@@ -155,7 +168,7 @@
                         <tr style="background-color: #f9f9f9;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold; width: 120px;">محصول:</td>
                             <td style="padding: 10px; border: 1px solid #dddddd;">{product_name} - {load_location}</td>
-                            </tr>
+                        </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">نام مشتری:</td>
                             <td style="padding: 10px; border: 1px solid #dddddd;">{customer_name}</td>
@@ -166,8 +179,8 @@
                         </tr>
                         <tr>
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">مقدار/تعداد:</td>
-                             <td style="padding: 10px; border: 1px solid #dddddd;">{qty} ({unit})</td>
-                             </tr>
+                            <td style="padding: 10px; border: 1px solid #dddddd;">{qty} ({unit})</td>
+                        </tr>
                         <tr style="background-color: #f9f9f9;">
                             <td style="padding: 10px; border: 1px solid #dddddd; font-weight: bold;">توضیحات:</td>
                             <td style="padding: 10px; border: 1px solid #dddddd;">{note}</td>
