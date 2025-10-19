@@ -25,14 +25,15 @@
 .cpp-product-info {
     display: flex;
     align-items: center;
+    gap: 10px; /* Add gap between image and text */
 }
 .cpp-product-info img {
     width: 50px;
     height: 50px;
     object-fit: cover;
     border-radius: 5px;
-    margin-left: 10px; /* Use margin-left for RTL */
-    flex-shrink: 0; /* Prevent image from shrinking */
+    /* margin-left: 10px; Removed, using gap now */
+    flex-shrink: 0;
 }
 .cpp-product-name {
     font-weight: bold;
@@ -50,14 +51,14 @@
     padding: 5px;
     display: inline-block;
     vertical-align: middle;
-    line-height: 1; /* Ensure icon aligns nicely */
+    line-height: 1;
 }
 .cpp-icon-btn img {
     width: 18px;
     height: 18px;
     opacity: 0.7;
     transition: opacity 0.2s;
-    vertical-align: middle; /* Align icon vertically */
+    vertical-align: middle;
 }
 .cpp-icon-btn:hover img {
     opacity: 1;
@@ -72,13 +73,13 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.6);
-    display: flex; /* Use flex for centering */
-    align-items: center; /* Vertical center */
-    justify-content: center; /* Horizontal center */
+    display: none; /* Changed initial state to none, shown by JS */
+    align-items: center;
+    justify-content: center;
     z-index: 10000;
     direction: rtl;
-    overflow-y: auto; /* Allow scrolling if content is too tall */
-    padding: 20px; /* Add padding for smaller screens */
+    overflow-y: auto;
+    padding: 20px;
     box-sizing: border-box;
 }
 .cpp-modal-container {
@@ -86,35 +87,34 @@
     padding: 25px 30px;
     border-radius: 8px;
     width: 90%;
-    /* --- شروع تغییر: افزایش عرض مودال --- */
-    max-width: 650px; /* Increased max-width */
-    /* --- پایان تغییر --- */
+    /* --- عرض مودال افزایش یافت --- */
+    max-width: 650px;
     position: relative;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    margin: auto; /* Ensure centered within flex container */
-    text-align: right; /* Ensure content aligns right */
+    margin: auto;
+    text-align: right;
 }
-/* Ensure chart container still works */
 .cpp-chart-container {
     max-width: 800px;
 }
 .cpp-chart-inner {
     width: 100%;
-    height: 400px;
+    min-height: 350px; /* Ensure minimum height */
+    height: 40vh; /* Use viewport height */
     position: relative;
 }
 
 .cpp-modal-close {
     position: absolute;
     top: 10px;
-    left: 10px; /* Adjusted for RTL, should be left */
+    left: 10px;
     background: none;
     border: none;
     font-size: 28px;
     cursor: pointer;
     color: #aaa;
     line-height: 1;
-    padding: 5px; /* Easier to click */
+    padding: 5px;
 }
 .cpp-modal-close:hover {
     color: #333;
@@ -125,6 +125,7 @@
     color: #333;
     font-weight: 600;
     font-size: 1.3em;
+    line-height: 1.4; /* Ensure title doesn't break awkwardly */
 }
 .cpp-form-field {
     margin-bottom: 15px;
@@ -145,13 +146,12 @@
     box-sizing: border-box;
     font-size: 1em;
 }
-/* Ensure LTR for phone input */
 .cpp-form-field input[type="tel"].ltr {
     direction: ltr;
     text-align: left;
 }
 
-.cpp-form-field button[type="submit"] { /* Target only submit button */
+.cpp-form-field button[type="submit"] {
     width: 100%;
     padding: 12px;
     background-color: #28a745;
@@ -173,6 +173,10 @@
     color: #dc3545;
     margin-right: 2px;
 }
+/* Placeholder for AJAX messages */
+.cpp-form-message-placeholder {
+    min-height: 20px; /* Reserve space */
+}
 .cpp-form-message {
     padding: 12px 15px;
     margin-bottom: 15px;
@@ -185,33 +189,49 @@
 .chart-error, .chart-loading { text-align: center; padding: 20px; color: #721c24; }
 .chart-loading { color: #555; }
 
-/* Captcha specific styles moved from inline */
-.cpp-captcha-wrap { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+/* --- شروع تغییر: تنظیم ظاهر کپچا --- */
+.cpp-captcha-wrap {
+    display: flex;
+    align-items: center; /* Vertically align items */
+    gap: 8px; /* Space between elements */
+    flex-wrap: nowrap; /* Prevent wrapping to next line */
+}
 .cpp-captcha-code {
     background-color: #f0f0f0; padding: 8px 10px; border-radius: 4px;
-    font-weight: bold; font-size: 1.2em; letter-spacing: 4px; /* Reduced spacing */
-    font-family: monospace; border: 1px solid #ccc;
-    min-width: 70px; /* Reduced width */
+    font-weight: bold; font-size: 1.3em; /* Slightly larger */
+    letter-spacing: 5px; /* Increase spacing */
+    font-family: monospace, sans-serif; /* Add fallback font */
+    border: 1px solid #ccc;
+    min-width: 90px; /* Adjusted width */
     text-align: center; user-select: none;
-    line-height: 1.5; /* Ensure height matches input */
+    line-height: 1.5;
+    flex-shrink: 0; /* Don't shrink code display */
 }
 .cpp-refresh-captcha {
-    background: none; border: none; font-size: 1.3em; /* Smaller */
-    cursor: pointer; color: #555; padding: 0 3px; /* Reduced padding */
+    background: none; border: none; font-size: 1.5em; /* Slightly larger */
+    cursor: pointer; color: #555; padding: 0 5px;
     line-height: 1;
+    order: 2; /* Move refresh button after input */
+    margin-right: auto; /* Push input to the left if space allows (for LTR context maybe?) */
 }
 .cpp-refresh-captcha:hover { color: #000; }
 #captcha_input {
-    width: 80px !important; /* Fixed smaller width */
-    flex-grow: 0;
+    width: 100px !important; /* Fixed width */
+    flex-grow: 0; /* Don't grow */
+    flex-shrink: 0; /* Don't shrink */
     text-align: center;
-    letter-spacing: 2px; /* Add spacing for input */
-    font-family: monospace;
-    font-size: 1.1em;
-    line-height: 1.5; /* Match captcha code height */
+    letter-spacing: 3px; /* Add spacing for input */
+    font-family: monospace, sans-serif;
+    font-size: 1.2em; /* Match code size */
+    line-height: 1.5; /* Match code height */
+    order: 1; /* Place input after code display */
+    box-sizing: border-box; /* Ensure padding is included in width */
 }
+/* --- پایان تغییر --- */
+
 
 /* Modal Title Adjustments */
+.cpp-modal-product-name { font-weight: bold; }
 .cpp-modal-product-location::before { content: " - "; font-weight: normal; font-size: 0.9em; color: #555;}
 .cpp-modal-product-location:empty::before { content: ""; }
 /* Modal Quantity Label Adjustments */
