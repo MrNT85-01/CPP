@@ -1,91 +1,61 @@
 <?php
-// Template for [cpp_products_list] shortcode
 if (!defined('ABSPATH')) exit;
-
-$disable_base_price = get_option('cpp_disable_base_price', 0);
-$cart_icon_url = CPP_ASSETS_URL . 'images/cart-icon.png';
-$chart_icon_url = CPP_ASSETS_URL . 'images/chart-icon.png';
-$default_image = get_option('cpp_default_product_image', CPP_ASSETS_URL . 'images/default-product.png');
-
 ?>
-<div class="cpp-products-list-container">
-    <table class="cpp-products-table">
-        <thead>
-            <tr>
-                <th><?php _e('محصول', 'cpp-full'); ?></th>
-                <th><?php _e('نوع', 'cpp-full'); ?></th>
-                <th><?php _e('واحد', 'cpp-full'); ?></th>
-                <th><?php _e('محل بارگیری', 'cpp-full'); ?></th>
-                <th><?php _e('آخرین بروزرسانی', 'cpp-full'); ?></th>
-                <?php if (!$disable_base_price) : ?>
-                    <th><?php _e('قیمت پایه', 'cpp-full'); ?></th>
-                <?php endif; ?>
-                <th><?php _e('بازه قیمت', 'cpp-full'); ?></th>
-                <th><?php _e('عملیات', 'cpp-full'); ?></th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($products as $product) :
-            $product_image_url = !empty($product->image_url) ? esc_url($product->image_url) : esc_url($default_image);
-        ?>
-            <tr data-id="<?php echo $product->id; ?>">
-                <td class="col-product-name" data-colname="<?php esc_attr_e('محصول', 'cpp-full'); ?>">
-                    <div class="cpp-product-info">
-                        <img src="<?php echo $product_image_url; ?>" alt="<?php echo esc_attr($product->name); ?>">
-                        <div class="cpp-product-details">
-                            <span class="cpp-product-name"><?php echo esc_html($product->name); ?></span>
-                        </div>
-                    </div>
-                </td>
-                <td data-colname="<?php esc_attr_e('نوع', 'cpp-full'); ?>"><?php echo esc_html($product->product_type); ?></td>
-                <td data-colname="<?php esc_attr_e('واحد', 'cpp-full'); ?>"><?php echo esc_html($product->unit); ?></td>
-                <td data-colname="<?php esc_attr_e('محل بارگیری', 'cpp-full'); ?>"><?php echo esc_html($product->load_location); ?></td>
-                <td data-colname="<?php esc_attr_e('آخرین بروزرسانی', 'cpp-full'); ?>"><?php echo date_i18n('Y/m/d H:i', strtotime(get_date_from_gmt($product->last_updated_at))); ?></td>
-                <?php if (!$disable_base_price) : ?>
-                    <td class="cpp-base-price col-price" data-colname="<?php esc_attr_e('قیمت پایه', 'cpp-full'); ?>">
-                         <?php
-                            $price_cleaned = str_replace(',', '', $product->price);
-                            echo is_numeric($price_cleaned) ? esc_html(number_format_i18n((float)$price_cleaned)) : esc_html($product->price);
-                         ?>
-                    </td>
-                <?php endif; ?>
-                <td class="cpp-price-range col-price-range" data-colname="<?php esc_attr_e('بازه قیمت', 'cpp-full'); ?>">
-                    <?php if (!empty($product->min_price) && !empty($product->max_price)) :
-                         $min_cleaned = str_replace(',', '', $product->min_price);
-                         $max_cleaned = str_replace(',', '', $product->max_price);
-                    ?>
-                        <?php echo is_numeric($min_cleaned) ? esc_html(number_format_i18n((float)$min_cleaned)) : esc_html($product->min_price); ?> - <?php echo is_numeric($max_cleaned) ? esc_html(number_format_i18n((float)$max_cleaned)) : esc_html($product->max_price); ?>
-                    <?php else: ?>
-                        <span class="cpp-price-not-set"><?php _e('تماس بگیرید', 'cpp-full'); ?></span>
-                    <?php endif; ?>
-                </td>
-                <td class="cpp-actions-cell col-actions" data-colname="<?php esc_attr_e('عملیات', 'cpp-full'); ?>">
-                    <button class="cpp-icon-btn cpp-order-btn"
-                            data-product-id="<?php echo esc_attr($product->id); ?>"
-                            data-product-name="<?php echo esc_attr($product->name); ?>"
-                            data-product-unit="<?php echo esc_attr($product->unit); ?>"
-                            data-product-location="<?php echo esc_attr($product->load_location); ?>"
-                            title="<?php esc_attr_e('ثبت سفارش', 'cpp-full'); ?>">
-                        <img src="<?php echo esc_url($cart_icon_url); ?>" alt="<?php esc_attr_e('ثبت سفارش', 'cpp-full'); ?>">
-                    </button>
-                    <button class="cpp-icon-btn cpp-chart-btn" data-product-id="<?php echo esc_attr($product->id); ?>" title="<?php esc_attr_e('نمودار', 'cpp-full'); ?>">
-                         <img src="<?php echo esc_url($chart_icon_url); ?>" alt="<?php esc_attr_e('نمودار', 'cpp-full'); ?>">
-                    </button>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-         <tfoot>
-             <tr>
-                 <th><?php _e('محصول', 'cpp-full'); ?></th>
-                 <th><?php _e('نوع', 'cpp-full'); ?></th>
-                 <th><?php _e('واحد', 'cpp-full'); ?></th>
-                 <th><?php _e('محل بارگیری', 'cpp-full'); ?></th>
-                 <th><?php _e('آخرین بروزرسانی', 'cpp-full'); ?></th>
-                 <?php if (!$disable_base_price) : ?><th><?php _e('قیمت پایه', 'cpp-full'); ?></th><?php endif; ?>
-                 <th><?php _e('بازه قیمت', 'cpp-full'); ?></th>
-                 <th><?php _e('عملیات', 'cpp-full'); ?></th>
-             </tr>
-         </tfoot>
-    </table>
-</div>
+<div class="wrap">
+    <h1><?php _e('راهنمای شورت‌کدهای افزونه', 'cpp-full'); ?></h1>
+
+    <div class="card">
+        <h2><?php _e('لیست محصولات (گرید با تاریخ)', 'cpp-full'); ?></h2>
+        <p><?php _e('این شورت‌کد یک جدول گرید پیشرفته از محصولات فعال را نمایش می‌دهد که شامل فیلتر دسته‌بندی، ستون تاریخ بروزرسانی و دکمه "مشاهده بیشتر" (Load More) است.', 'cpp-full'); ?></p>
+        <code>[cpp_products_grid_view]</code>
+    </div>
+
+    <div class="card">
+        <h2><?php _e('لیست محصولات (گرید بدون تاریخ)', 'cpp-full'); ?></h2>
+        <p><?php _e('این شورت‌کد یک جدول گرید مشابه بالایی نمایش می‌دهد، اما ستون تاریخ بروزرسانی را حذف می‌کند و در بالای جدول، "آخرین زمان بروزرسانی" کلی را نمایش می‌دهد.', 'cpp-full'); ?></p>
+        <code>[cpp_products_grid_view_no_date]</code>
+    </div>
+
+    <div class="card">
+        <h2><?php _e('لیست محصولات (ساده)', 'cpp-full'); ?></h2>
+        <p><?php _e('این شورت‌کد یک لیست جدولی ساده‌تر از محصولات را نمایش می‌دهد. این شورت‌کد از دکمه "مشاهده بیشتر" پشتیبانی نمی‌کند اما قابلیت فیلتر بر اساس شناسه یا دسته‌بندی را دارد.', 'cpp-full'); ?></p>
+        <code>[cpp_products_list]</code>
+        
+        <h3><?php _e('پارامترهای قابل قبول:', 'cpp-full'); ?></h3>
+        <ul>
+            <li><strong>cat_id:</strong> <?php _e('برای نمایش محصولات یک یا چند دسته‌بندی خاص (جدا شده با کاما). مثال:', 'cpp-full'); ?> <code>[cpp_products_list cat_id="1,5"]</code></li>
+            <li><strong>ids:</strong> <?php _e('برای نمایش محصولات خاص بر اساس شناسه (جدا شده با کاما). مثال:', 'cpp-full'); ?> <code>[cpp_products_list ids="10,15"]</code></li>
+            <li><strong>status:</strong> <?php _e('برای نمایش محصولات فعال (1)، غیرفعال (0) یا همه (all). پیش‌فرض 1 است. مثال:', 'cpp-full'); ?> <code>[cpp_products_list status="all"]</code></li>
+        </ul>
+    </div>
+
+    <style>
+        .wrap .card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            box-shadow: 0 1px 1px rgba(0,0,0,.04);
+            padding: 15px 20px;
+            margin-top: 20px;
+            direction: rtl;
+            text-align: right;
+        }
+        .wrap .card h2 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        .wrap .card code {
+            display: block;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            direction: ltr;
+            text-align: left;
+            user-select: all;
+        }
+         .wrap .card ul {
+             list-style-type: disc;
+             margin-right: 20px;
+         }
+         .wrap .card ul li {
+             margin-bottom: 5px;
+         }
